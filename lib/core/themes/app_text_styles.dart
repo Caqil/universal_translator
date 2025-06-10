@@ -9,7 +9,7 @@ class AppTextStyles {
 
   // ============ Base Font Configuration ============
 
-  static const String _fontFamily = 'Inter';
+  static const String fontFamily = 'Inter';
   static const FontWeight _regular = FontWeight.w400;
   static const FontWeight _medium = FontWeight.w500;
   static const FontWeight _semiBold = FontWeight.w600;
@@ -19,7 +19,7 @@ class AppTextStyles {
 
   /// Display Large - 57sp
   static const TextStyle displayLarge = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 57.0,
     fontWeight: _bold,
     height: 1.12,
@@ -28,7 +28,7 @@ class AppTextStyles {
 
   /// Display Medium - 45sp
   static const TextStyle displayMedium = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 45.0,
     fontWeight: _bold,
     height: 1.16,
@@ -37,7 +37,7 @@ class AppTextStyles {
 
   /// Display Small - 36sp
   static const TextStyle displaySmall = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 36.0,
     fontWeight: _bold,
     height: 1.22,
@@ -48,7 +48,7 @@ class AppTextStyles {
 
   /// Headline Large - 32sp
   static const TextStyle headlineLarge = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 32.0,
     fontWeight: _bold,
     height: 1.25,
@@ -57,7 +57,7 @@ class AppTextStyles {
 
   /// Headline Medium - 28sp
   static const TextStyle headlineMedium = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeHeading,
     fontWeight: _semiBold,
     height: 1.29,
@@ -66,7 +66,7 @@ class AppTextStyles {
 
   /// Headline Small - 24sp
   static const TextStyle headlineSmall = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeTitle,
     fontWeight: _semiBold,
     height: 1.33,
@@ -77,7 +77,7 @@ class AppTextStyles {
 
   /// Title Large - 22sp
   static const TextStyle titleLarge = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 22.0,
     fontWeight: _semiBold,
     height: 1.27,
@@ -86,7 +86,7 @@ class AppTextStyles {
 
   /// Title Medium - 16sp
   static const TextStyle titleMedium = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeMedium,
     fontWeight: _medium,
     height: 1.5,
@@ -95,7 +95,7 @@ class AppTextStyles {
 
   /// Title Small - 14sp
   static const TextStyle titleSmall = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeRegular,
     fontWeight: _medium,
     height: 1.43,
@@ -106,7 +106,7 @@ class AppTextStyles {
 
   /// Label Large - 14sp
   static const TextStyle labelLarge = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeRegular,
     fontWeight: _medium,
     height: 1.43,
@@ -115,7 +115,7 @@ class AppTextStyles {
 
   /// Label Medium - 12sp
   static const TextStyle labelMedium = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeSmall,
     fontWeight: _medium,
     height: 1.33,
@@ -124,7 +124,7 @@ class AppTextStyles {
 
   /// Label Small - 11sp
   static const TextStyle labelSmall = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 11.0,
     fontWeight: _medium,
     height: 1.45,
@@ -135,7 +135,7 @@ class AppTextStyles {
 
   /// Body Large - 16sp
   static const TextStyle bodyLarge = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeMedium,
     fontWeight: _regular,
     height: 1.5,
@@ -144,7 +144,7 @@ class AppTextStyles {
 
   /// Body Medium - 14sp
   static const TextStyle bodyMedium = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeRegular,
     fontWeight: _regular,
     height: 1.43,
@@ -153,7 +153,7 @@ class AppTextStyles {
 
   /// Body Small - 12sp
   static const TextStyle bodySmall = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeSmall,
     fontWeight: _regular,
     height: 1.33,
@@ -164,7 +164,7 @@ class AppTextStyles {
 
   /// Translation Input Text
   static const TextStyle translationInput = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeLarge,
     fontWeight: _regular,
     height: 1.44,
@@ -173,7 +173,7 @@ class AppTextStyles {
 
   /// Translation Output Text
   static const TextStyle translationOutput = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeLarge,
     fontWeight: _medium,
     height: 1.44,
@@ -182,7 +182,7 @@ class AppTextStyles {
 
   /// Language Name Text
   static const TextStyle languageName = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeMedium,
     fontWeight: _medium,
     height: 1.5,
@@ -191,7 +191,7 @@ class AppTextStyles {
 
   /// Language Native Name Text
   static const TextStyle languageNativeName = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeRegular,
     fontWeight: _regular,
     height: 1.43,
@@ -200,7 +200,7 @@ class AppTextStyles {
 
   /// Button Text
   static const TextStyle button = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeRegular,
     fontWeight: _medium,
     height: 1.43,
@@ -209,7 +209,7 @@ class AppTextStyles {
 
   /// Caption Text
   static const TextStyle caption = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeSmall,
     fontWeight: _regular,
     height: 1.33,
@@ -218,7 +218,7 @@ class AppTextStyles {
 
   /// Overline Text
   static const TextStyle overline = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: 10.0,
     fontWeight: _medium,
     height: 1.6,
@@ -238,7 +238,7 @@ class AppTextStyles {
 
   /// Error Text
   static const TextStyle error = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeSmall,
     fontWeight: _regular,
     height: 1.33,
@@ -247,7 +247,7 @@ class AppTextStyles {
 
   /// Helper Text
   static const TextStyle helper = TextStyle(
-    fontFamily: _fontFamily,
+    fontFamily: fontFamily,
     fontSize: AppConstants.fontSizeSmall,
     fontWeight: _regular,
     height: 1.33,

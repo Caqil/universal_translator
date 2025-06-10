@@ -16,12 +16,19 @@ import '../constants/app_constants.dart';
 
 final sl = GetIt.instance;
 
-@InjectableInit()
-Future<void> configureDependencies() => sl.init();
+@InjectableInit(
+  initializerName:
+      r'$initGetIt', // Ensure this matches the generated function name
+  preferRelativeImports: true,
+  asExtension: false,
+)
+Future<void> configureDependencies() async {
+  $initGetIt(sl); // Call the generated function
+}
 
 /// Initialize all dependencies for the application
 Future<void> init() async {
-  // External dependencies
+// External dependencies
   await _initExternalDependencies();
 
   // Core dependencies
@@ -29,9 +36,6 @@ Future<void> init() async {
 
   // Feature dependencies
   await _initFeatureDependencies();
-
-  // Configure injectable dependencies
-  await configureDependencies();
 }
 
 /// Initialize external dependencies (packages, plugins)
@@ -45,7 +49,7 @@ Future<void> _initExternalDependencies() async {
 
   // Internet Connection Checker
   sl.registerLazySingleton<InternetConnectionChecker>(
-    () => InternetConnectionChecker(),
+    () => InternetConnectionChecker.createInstance(), // Use createInstance
   );
 
   // Hive Boxes

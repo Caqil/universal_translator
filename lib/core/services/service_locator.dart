@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import '../constants/app_constants.dart';
 
@@ -73,7 +75,7 @@ class ServiceLocator {
   /// Unregister a service
   static Future<void> unregister<T extends Object>({
     String? instanceName,
-    Object? disposingFunction,
+    FutureOr<dynamic> Function(T)? disposingFunction,
   }) async {
     await _getIt.unregister<T>(
       instanceName: instanceName,
@@ -108,7 +110,7 @@ class ServiceLocator {
   }
 
   /// Check if GetIt is ready
-  static bool get isReady => _getIt.isReady<void>();
+  static bool get isReady => _getIt.isReadySync<T>();
 
   /// Get dependency scope
   static String? get currentScopeName => _getIt.currentScopeName;
@@ -131,7 +133,7 @@ class ServiceLocator {
 
   /// Clear scope
   static Future<void> clearScope([String? scopeName]) async {
-    await _getIt.dropScope(scopeName);
+    await _getIt.dropScope(scopeName!);
   }
 }
 

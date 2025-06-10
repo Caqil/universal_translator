@@ -106,9 +106,8 @@ class NetworkInfoImpl implements NetworkInfo {
     try {
       final checker = InternetConnectionChecker.createInstance(
         addresses: [
-          AddressCheckOptions(
-            hostname: host,
-            port: port,
+          AddressCheckOption(
+            uri: Uri.parse(host),
             timeout: timeout,
           ),
         ],
