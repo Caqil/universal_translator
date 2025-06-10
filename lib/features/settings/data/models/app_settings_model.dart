@@ -1,141 +1,96 @@
-// lib/features/settings/data/models/settings_model.dart
-import 'package:json_annotation/json_annotation.dart';
-import 'package:hive/hive.dart';
+// lib/core/settings/app_settings.dart
 import 'package:equatable/equatable.dart';
 
-import 'app_settings_model.dart';
-
-
-part 'settings_model.g.dart';
-
-/// Data model for app settings
-@HiveType(typeId: 5)
-@JsonSerializable()
-class SettingsModel extends Equatable {
+/// Application settings configuration
+class AppSettings extends Equatable {
   /// App theme mode
-  @HiveField(0)
-  @JsonKey(toJson: _themeToJson, fromJson: _themeFromJson)
   final AppTheme theme;
 
   /// App language
-  @HiveField(1)
   final String language;
 
   /// Enable auto-translate on text input
-  @HiveField(2)
   final bool autoTranslate;
 
   /// Auto-translate delay in milliseconds
-  @HiveField(3)
   final int autoTranslateDelay;
 
   /// Enable speech feedback
-  @HiveField(4)
   final bool enableSpeechFeedback;
 
   /// Speech rate (0.0 to 2.0)
-  @HiveField(5)
   final double speechRate;
 
   /// Speech pitch (0.0 to 2.0)
-  @HiveField(6)
   final double speechPitch;
 
   /// Speech volume (0.0 to 1.0)
-  @HiveField(7)
   final double speechVolume;
 
   /// Enable haptic feedback
-  @HiveField(8)
   final bool enableHapticFeedback;
 
   /// Enable sound effects
-  @HiveField(9)
   final bool enableSoundEffects;
 
   /// Sound effects volume (0.0 to 1.0)
-  @HiveField(10)
   final double soundEffectsVolume;
 
   /// Enable notifications
-  @HiveField(11)
   final bool enableNotifications;
 
   /// Enable push notifications
-  @HiveField(12)
   final bool enablePushNotifications;
 
   /// Default source language
-  @HiveField(13)
   final String defaultSourceLanguage;
 
   /// Default target language
-  @HiveField(14)
   final String defaultTargetLanguage;
 
   /// Show translation confidence
-  @HiveField(15)
   final bool showTranslationConfidence;
 
   /// Show alternative translations
-  @HiveField(16)
   final bool showAlternativeTranslations;
 
   /// Maximum history items
-  @HiveField(17)
   final int maxHistoryItems;
 
   /// Auto-save translations
-  @HiveField(18)
   final bool autoSaveTranslations;
 
   /// Enable offline mode
-  @HiveField(19)
   final bool enableOfflineMode;
 
   /// Data usage mode
-  @HiveField(20)
-  @JsonKey(toJson: _dataUsageModeToJson, fromJson: _dataUsageModeFromJson)
   final DataUsageMode dataUsageMode;
 
   /// Font size multiplier
-  @HiveField(21)
   final double fontSizeMultiplier;
 
   /// Enable high contrast
-  @HiveField(22)
   final bool enableHighContrast;
 
   /// Enable reduce motion
-  @HiveField(23)
   final bool enableReduceMotion;
 
   /// Camera flash for OCR
-  @HiveField(24)
   final bool useCameraFlash;
 
   /// Auto-detect language
-  @HiveField(25)
   final bool autoDetectLanguage;
 
   /// Translation cache duration in hours
-  @HiveField(26)
   final int translationCacheDuration;
 
   /// Privacy analytics consent
-  @HiveField(27)
   final bool analyticsConsent;
 
   /// Privacy crash reporting consent
-  @HiveField(28)
   final bool crashReportingConsent;
 
-  /// Timestamp when settings were last updated
-  @HiveField(29)
-  @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
-  final DateTime lastUpdated;
-
-  const SettingsModel({
+  const AppSettings({
     this.theme = AppTheme.system,
     this.language = 'en',
     this.autoTranslate = false,
@@ -165,96 +120,10 @@ class SettingsModel extends Equatable {
     this.translationCacheDuration = 24,
     this.analyticsConsent = false,
     this.crashReportingConsent = false,
-    required this.lastUpdated,
   });
 
-  /// Create from JSON
-  factory SettingsModel.fromJson(Map<String, dynamic> json) =>
-      _$SettingsModelFromJson(json);
-
-  /// Convert to JSON
-  Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
-
-  /// Convert to domain entity
-  AppSettings toEntity() {
-    return AppSettings(
-      theme: theme,
-      language: language,
-      autoTranslate: autoTranslate,
-      autoTranslateDelay: autoTranslateDelay,
-      enableSpeechFeedback: enableSpeechFeedback,
-      speechRate: speechRate,
-      speechPitch: speechPitch,
-      speechVolume: speechVolume,
-      enableHapticFeedback: enableHapticFeedback,
-      enableSoundEffects: enableSoundEffects,
-      soundEffectsVolume: soundEffectsVolume,
-      enableNotifications: enableNotifications,
-      enablePushNotifications: enablePushNotifications,
-      defaultSourceLanguage: defaultSourceLanguage,
-      defaultTargetLanguage: defaultTargetLanguage,
-      showTranslationConfidence: showTranslationConfidence,
-      showAlternativeTranslations: showAlternativeTranslations,
-      maxHistoryItems: maxHistoryItems,
-      autoSaveTranslations: autoSaveTranslations,
-      enableOfflineMode: enableOfflineMode,
-      dataUsageMode: dataUsageMode,
-      fontSizeMultiplier: fontSizeMultiplier,
-      enableHighContrast: enableHighContrast,
-      enableReduceMotion: enableReduceMotion,
-      useCameraFlash: useCameraFlash,
-      autoDetectLanguage: autoDetectLanguage,
-      translationCacheDuration: translationCacheDuration,
-      analyticsConsent: analyticsConsent,
-      crashReportingConsent: crashReportingConsent,
-    );
-  }
-
-  /// Create from domain entity
-  factory SettingsModel.fromEntity(AppSettings entity) {
-    return SettingsModel(
-      theme: entity.theme,
-      language: entity.language,
-      autoTranslate: entity.autoTranslate,
-      autoTranslateDelay: entity.autoTranslateDelay,
-      enableSpeechFeedback: entity.enableSpeechFeedback,
-      speechRate: entity.speechRate,
-      speechPitch: entity.speechPitch,
-      speechVolume: entity.speechVolume,
-      enableHapticFeedback: entity.enableHapticFeedback,
-      enableSoundEffects: entity.enableSoundEffects,
-      soundEffectsVolume: entity.soundEffectsVolume,
-      enableNotifications: entity.enableNotifications,
-      enablePushNotifications: entity.enablePushNotifications,
-      defaultSourceLanguage: entity.defaultSourceLanguage,
-      defaultTargetLanguage: entity.defaultTargetLanguage,
-      showTranslationConfidence: entity.showTranslationConfidence,
-      showAlternativeTranslations: entity.showAlternativeTranslations,
-      maxHistoryItems: entity.maxHistoryItems,
-      autoSaveTranslations: entity.autoSaveTranslations,
-      enableOfflineMode: entity.enableOfflineMode,
-      dataUsageMode: entity.dataUsageMode,
-      fontSizeMultiplier: entity.fontSizeMultiplier,
-      enableHighContrast: entity.enableHighContrast,
-      enableReduceMotion: entity.enableReduceMotion,
-      useCameraFlash: entity.useCameraFlash,
-      autoDetectLanguage: entity.autoDetectLanguage,
-      translationCacheDuration: entity.translationCacheDuration,
-      analyticsConsent: entity.analyticsConsent,
-      crashReportingConsent: entity.crashReportingConsent,
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  /// Create default settings
-  factory SettingsModel.defaultSettings() {
-    return SettingsModel(
-      lastUpdated: DateTime.now(),
-    );
-  }
-
   /// Copy with new values
-  SettingsModel copyWith({
+  AppSettings copyWith({
     AppTheme? theme,
     String? language,
     bool? autoTranslate,
@@ -284,9 +153,8 @@ class SettingsModel extends Equatable {
     int? translationCacheDuration,
     bool? analyticsConsent,
     bool? crashReportingConsent,
-    DateTime? lastUpdated,
   }) {
-    return SettingsModel(
+    return AppSettings(
       theme: theme ?? this.theme,
       language: language ?? this.language,
       autoTranslate: autoTranslate ?? this.autoTranslate,
@@ -323,7 +191,6 @@ class SettingsModel extends Equatable {
       analyticsConsent: analyticsConsent ?? this.analyticsConsent,
       crashReportingConsent:
           crashReportingConsent ?? this.crashReportingConsent,
-      lastUpdated: lastUpdated ?? DateTime.now(),
     );
   }
 
@@ -358,26 +225,55 @@ class SettingsModel extends Equatable {
         translationCacheDuration,
         analyticsConsent,
         crashReportingConsent,
-        lastUpdated,
       ];
 
   @override
-  String toString() => 'SettingsModel(theme: $theme, language: $language)';
+  String toString() => 'AppSettings(theme: $theme, language: $language)';
 }
 
-// JSON converters
-String _themeToJson(AppTheme theme) => theme.name;
-AppTheme _themeFromJson(String theme) => AppTheme.values.firstWhere(
-      (e) => e.name == theme,
-      orElse: () => AppTheme.system,
-    );
+/// App theme modes
+enum AppTheme {
+  light,
+  dark,
+  system;
 
-String _dataUsageModeToJson(DataUsageMode mode) => mode.name;
-DataUsageMode _dataUsageModeFromJson(String mode) =>
-    DataUsageMode.values.firstWhere(
-      (e) => e.name == mode,
-      orElse: () => DataUsageMode.standard,
-    );
+  String get displayName {
+    switch (this) {
+      case AppTheme.light:
+        return 'Light';
+      case AppTheme.dark:
+        return 'Dark';
+      case AppTheme.system:
+        return 'System';
+    }
+  }
+}
 
-DateTime _dateTimeFromJson(String dateTime) => DateTime.parse(dateTime);
-String _dateTimeToJson(DateTime dateTime) => dateTime.toIso8601String();
+/// Data usage modes
+enum DataUsageMode {
+  low,
+  standard,
+  unlimited;
+
+  String get displayName {
+    switch (this) {
+      case DataUsageMode.low:
+        return 'Low Data';
+      case DataUsageMode.standard:
+        return 'Standard';
+      case DataUsageMode.unlimited:
+        return 'Unlimited';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case DataUsageMode.low:
+        return 'Minimizes data usage by limiting features';
+      case DataUsageMode.standard:
+        return 'Balanced data usage for most features';
+      case DataUsageMode.unlimited:
+        return 'Full features with unrestricted data usage';
+    }
+  }
+}

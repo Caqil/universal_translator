@@ -216,29 +216,39 @@ class SpeechBloc extends Bloc<SpeechEvent, SpeechState> {
       ));
     }
   }
-
-  Future<void> _onSpeakText(
-    SpeakTextEvent event,
-    Emitter<SpeechState> emit,
-  ) async {
-    if (!state.canSpeak) {
-      emit(state.copyWith(
-        status: SpeechStatus.error,
-        errorMessage: 'Cannot speak text in current state',
-      ));
-      return;
-    }
-
+Future<void> _onSpeakText(
+  SpeakTextEvent event,
+  Emitter<SpeechState> emit,
+) async {
+  if (!state.canSpeak) {
     emit(state.copyWith(
-      status: SpeechStatus.speaking,
-      currentSpeechText: event.text,
-      languageCode: event.languageCode,
-      speechRate: event.rate,
-      speechPitch: event.pitch,
-      speechVolume: event.volume,
-      errorMessage: null,
+      status: SpeechStatus.error,
+      errorMessage: 'Cannot speak text in current state',
     ));
+    return;
+  }
 
+  // Validate input text
+  if (event.text.trim().isEmpty) {
+    emit(state.copyWith(
+      status: SpeechStatus.error,
+      errorMessage: 'Cannot speak empty text',
+    ));
+    return;
+  }
+
+  // Set initial speaking state
+  emit(state.copyWith(
+    status: SpeechStatus.speaking,
+    currentSpeechText: event.text,
+    languageCode: event.languageCode,
+    speechRate: event.rate,
+    speechPitch: event.pitch,
+    speechVolume: event.volume,
+    errorMessage: null,
+  ));
+
+  try {
     final result = await _textToSpeech(TextToSpeechParams(
       text: event.text,
       languageCode: event.languageCode,
@@ -256,13 +266,62 @@ class SpeechBloc extends Bloc<SpeechEvent, SpeechState> {
         ));
       },
       (_) {
-        // Note: The actual completion is handled by the TTS completion callback
-        // in the data source. For now, we'll keep the speaking status.
-        // In a real implementation, you might want to poll the repository
-        // for speaking status or use a stream.
+        // TTS started successfully, monitor for completion
+        _monitorTTSCompletion(emit);
       },
     );
+  } catch (e) {
+    emit(state.copyWith(
+      status: SpeechStatus.error,
+      errorMessage: 'Failed to speak text: ${e.toString()}',
+      currentSpeechText: null,
+    ));
   }
+}
+
+/// Monitor TTS completion using periodic checks
+void _monitorTTSCompletion(Emitter<SpeechState> emit) {
+  Timer.periodic(const Duration(milliseconds: 200), (timer) {
+    if (isClosed) {
+      timer.cancel();
+      return;
+    }
+
+    try {
+      // Check if TTS is still speaking via repository getter
+      final isSpeaking = _repository.isSpeaking;
+      
+      if (!isSpeaking && state.status == SpeechStatus.speaking) {
+        // TTS has completed
+        timer.cancel();
+        emit(state.copyWith(
+          status: SpeechStatus.ready,
+          currentSpeechText: null,
+        ));
+      }
+    } catch (e) {
+      // Error occurred, assume completed
+      timer.cancel();
+      if (state.status == SpeechStatus.speaking) {
+        emit(state.copyWith(
+          status: SpeechStatus.ready,
+          currentSpeechText: null,
+        ));
+      }
+    }
+  });
+
+  // Safety timeout to prevent infinite monitoring (5 minutes)
+  Timer(const Duration(minutes: 5), () {
+    if (state.status == SpeechStatus.speaking) {
+      emit(state.copyWith(
+        status: SpeechStatus.error,
+        errorMessage: 'Text-to-speech timed out',
+        currentSpeechText: null,
+      ));
+    }
+  });
+}
 
   Future<void> _onStopSpeaking(
     StopSpeakingEvent event,
