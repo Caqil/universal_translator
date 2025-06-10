@@ -109,9 +109,6 @@ class ServiceLocator {
     return _getIt.getAll<T>();
   }
 
-  /// Check if GetIt is ready
-  static bool get isReady => _getIt.isReadySync<T>();
-
   /// Get dependency scope
   static String? get currentScopeName => _getIt.currentScopeName;
 
