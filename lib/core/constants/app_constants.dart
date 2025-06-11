@@ -59,6 +59,7 @@ class AppConstants {
 
   // Storage Keys - Hive Boxes
   static const String historyBoxName = 'history_box';
+  static const String translationsBoxName = 'translations_box';
   static const String favoritesBoxName = 'favorites_box';
   static const String settingsBoxName = 'settings_box';
   static const String languagesBoxName = 'languages_box';

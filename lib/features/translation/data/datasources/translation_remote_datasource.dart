@@ -32,7 +32,6 @@ abstract class TranslationRemoteDataSource {
   });
 }
 
-/// Implementation of translation remote data source using LibreTranslate API
 @LazySingleton(as: TranslationRemoteDataSource)
 class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
   final DioClient _dioClient;
@@ -63,12 +62,14 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
         throw TranslationException.sameLanguage();
       }
 
-      // Prepare request data
+      // Prepare request data matching LibreTranslate API spec
       final requestData = {
         ApiConstants.paramQ: text.trim(),
         ApiConstants.paramSource: sourceLanguage,
         ApiConstants.paramTarget: targetLanguage,
         ApiConstants.paramFormat: ApiConstants.defaultFormat,
+        ApiConstants.paramAlternatives: ApiConstants.defaultAlternatives,
+        // API key will be added automatically by DioClient.post()
       };
 
       // Make API request
@@ -77,22 +78,34 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
         data: requestData,
       );
 
-      // Parse response
+      // Parse response according to LibreTranslate spec
       final responseData = response.data as Map<String, dynamic>;
 
       if (!responseData.containsKey('translatedText')) {
         throw const ServerException(
-          message: 'Invalid response format',
+          message: 'Invalid response format - missing translatedText',
           code: 'INVALID_RESPONSE',
         );
       }
 
       final translatedText = responseData['translatedText'] as String;
-      final detectedLanguage = responseData['detectedLanguage'] as String?;
+
+      // Handle detectedLanguage object structure
+      String? detectedLanguageCode;
+      if (responseData.containsKey('detectedLanguage')) {
+        final detectedLang = responseData['detectedLanguage'];
+        if (detectedLang is Map<String, dynamic>) {
+          // New format: {"confidence": 30, "language": "es"}
+          detectedLanguageCode = detectedLang['language'] as String?;
+        } else if (detectedLang is String) {
+          // Fallback for older format
+          detectedLanguageCode = detectedLang;
+        }
+      }
 
       // Use detected language if source was auto
       final effectiveSourceLanguage = sourceLanguage == 'auto'
-          ? (detectedLanguage ?? sourceLanguage)
+          ? (detectedLanguageCode ?? sourceLanguage)
           : sourceLanguage;
 
       // Create translation model
@@ -103,6 +116,8 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
         sourceLanguage: effectiveSourceLanguage,
         targetLanguage: targetLanguage,
         timestamp: DateTime.now(),
+        // Store alternatives if available
+        alternatives: _extractAlternatives(responseData),
       );
     } catch (e) {
       if (e is TranslationException ||
@@ -130,6 +145,7 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
 
       final requestData = {
         ApiConstants.paramQ: text.trim(),
+        // API key will be added automatically by DioClient.post()
       };
 
       final response = await _dioClient.post(
@@ -137,26 +153,22 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
         data: requestData,
       );
 
-      final responseData = response.data as Map<String, dynamic>;
+      final responseData = response.data as List<dynamic>;
 
-      if (!responseData.containsKey('language')) {
+      if (responseData.isEmpty) {
         throw const ServerException(
-          message: 'Invalid response format for language detection',
-          code: 'INVALID_RESPONSE',
+          message: 'No language detected',
+          code: 'NO_LANGUAGE_DETECTED',
         );
       }
 
-      final detectedLanguage = responseData['language'] as String;
-      final confidence = responseData['confidence'] as double?;
+      // LibreTranslate detect returns array of results
+      final firstResult = responseData.first as Map<String, dynamic>;
+      final detectedLanguage = firstResult['language'] as String;
+      final confidence = firstResult['confidence'] as double?;
 
-      // Validate detected language
-      if (!LanguageConstants.isLanguageSupported(detectedLanguage)) {
-        throw TranslationException.languageNotSupported(detectedLanguage);
-      }
-
-      // Check confidence threshold
-      if (confidence != null &&
-          confidence < LanguageConstants.lowConfidenceThreshold) {
+      // Validate confidence if available
+      if (confidence != null && confidence < 0.1) {
         throw const TranslationException(
           message: 'Language detection confidence too low',
           code: 'LOW_CONFIDENCE',
@@ -184,7 +196,6 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
       final response = await _dioClient.get(ApiConstants.languagesEndpoint);
 
       final responseData = response.data as List<dynamic>;
-
       final languages = <LanguageModel>[];
 
       for (final langData in responseData) {
@@ -193,34 +204,18 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
           final code = langMap['code'] as String;
           final name = langMap['name'] as String;
 
-          // Use our predefined language data if available
-          if (LanguageConstants.supportedLanguages.containsKey(code)) {
-            final langInfo = LanguageConstants.supportedLanguages[code]!;
-            languages.add(LanguageModel(
-              code: code,
-              name: langInfo['name']!,
-              nativeName: langInfo['nativeName']!,
-              flag: langInfo['flag']!,
-              isRtl: langInfo['rtl'] == 'true',
-              family: langInfo['family']!,
-              supportsSTT: LanguageConstants.supportsSpeechToText(code),
-              supportsTTS: LanguageConstants.supportsTextToSpeech(code),
-              supportsOCR: LanguageConstants.supportsOcr(code),
-            ));
-          } else {
-            // Fallback for unknown languages
-            languages.add(LanguageModel(
-              code: code,
-              name: name,
-              nativeName: name,
-              flag: '🌍',
-              isRtl: false,
-              family: 'Other',
-              supportsSTT: false,
-              supportsTTS: false,
-              supportsOCR: false,
-            ));
-          }
+          // Create language model
+          languages.add(LanguageModel(
+            code: code,
+            name: name,
+            nativeName: name, // LibreTranslate doesn't provide native names
+            flag: _getLanguageFlag(code),
+            isRtl: _isRightToLeft(code),
+            family: 'Unknown',
+            supportsSTT: false,
+            supportsTTS: false,
+            supportsOCR: false,
+          ));
         } catch (e) {
           // Skip invalid language entries
           continue;
@@ -250,46 +245,79 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
     required String targetLanguage,
     int alternatives = 3,
   }) async {
-    try {
-      final requestData = {
-        ApiConstants.paramQ: text.trim(),
-        ApiConstants.paramSource: sourceLanguage,
-        ApiConstants.paramTarget: targetLanguage,
-        ApiConstants.paramFormat: ApiConstants.defaultFormat,
-        ApiConstants.paramAlternatives: alternatives,
-      };
+    // LibreTranslate returns alternatives in the main translate call
+    final translation = await translateText(
+      text: text,
+      sourceLanguage: sourceLanguage,
+      targetLanguage: targetLanguage,
+    );
 
-      final response = await _dioClient.post(
-        ApiConstants.translateEndpoint,
-        data: requestData,
-      );
+    return translation.alternatives ?? [translation.translatedText];
+  }
 
-      final responseData = response.data as Map<String, dynamic>;
+  // Helper methods
 
-      // Primary translation
-      final primaryTranslation = responseData['translatedText'] as String;
-      final alternativesList = <String>[primaryTranslation];
-
-      // Alternative translations (if supported by API)
-      if (responseData.containsKey('alternatives')) {
-        final alternatives = responseData['alternatives'] as List<dynamic>;
-        for (final alt in alternatives) {
-          if (alt is String && alt != primaryTranslation) {
-            alternativesList.add(alt);
-          }
-        }
-      }
-
-      return alternativesList;
-    } catch (e) {
-      if (e is ServerException || e is NetworkException) {
-        rethrow;
-      }
-
-      throw ServerException(
-        message: 'Failed to get translation alternatives: ${e.toString()}',
-        code: 'ALTERNATIVES_FAILED',
-      );
+  List<String>? _extractAlternatives(Map<String, dynamic> responseData) {
+    if (!responseData.containsKey('alternatives')) {
+      return null;
     }
+
+    final alternatives = responseData['alternatives'] as List<dynamic>?;
+    if (alternatives == null || alternatives.isEmpty) {
+      return null;
+    }
+
+    return alternatives
+        .where((alt) => alt is String && alt.isNotEmpty)
+        .cast<String>()
+        .toList();
+  }
+
+  String _getLanguageFlag(String code) {
+    // Simple mapping for common language codes
+    const flags = {
+      'en': '🇺🇸',
+      'es': '🇪🇸',
+      'fr': '🇫🇷',
+      'de': '🇩🇪',
+      'it': '🇮🇹',
+      'pt': '🇵🇹',
+      'ru': '🇷🇺',
+      'ja': '🇯🇵',
+      'ko': '🇰🇷',
+      'zh': '🇨🇳',
+      'ar': '🇸🇦',
+      'hi': '🇮🇳',
+      'tr': '🇹🇷',
+      'pl': '🇵🇱',
+      'nl': '🇳🇱',
+      'sv': '🇸🇪',
+      'da': '🇩🇰',
+      'no': '🇳🇴',
+      'fi': '🇫🇮',
+      'cs': '🇨🇿',
+      'hu': '🇭🇺',
+      'ro': '🇷🇴',
+      'bg': '🇧🇬',
+      'hr': '🇭🇷',
+      'sk': '🇸🇰',
+      'sl': '🇸🇮',
+      'et': '🇪🇪',
+      'lv': '🇱🇻',
+      'lt': '🇱🇹',
+      'mt': '🇲🇹',
+      'id': '🇮🇩',
+      'ms': '🇲🇾',
+      'th': '🇹🇭',
+      'vi': '🇻🇳',
+      'uk': '🇺🇦',
+    };
+
+    return flags[code] ?? '🌍';
+  }
+
+  bool _isRightToLeft(String code) {
+    const rtlLanguages = {'ar', 'he', 'fa', 'ur', 'yi'};
+    return rtlLanguages.contains(code);
   }
 }

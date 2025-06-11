@@ -2,16 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:translate_app/config/routes/app_router.dart';
+import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
+import 'package:translate_app/features/translation/presentation/bloc/translation_event.dart';
 
 import 'core/constants/app_constants.dart';
+import 'core/services/injection_container.dart';
 import 'features/settings/data/models/app_settings_model.dart';
 
 /// Import for development utilities
 import 'dart:io' show Platform;
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/foundation.dart' show kDebugMode;
+
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/settings/presentation/bloc/settings_event.dart';
+import 'features/settings/presentation/bloc/settings_state.dart';
 
 void main() async {
   // Ensure Flutter is initialized
@@ -101,70 +109,42 @@ class TranslateApp extends StatelessWidget {
     // For now, using default settings. Uncomment MultiBlocProvider when BLoCs are ready
     const settings = AppSettings(); // Default settings
 
-    return MaterialApp.router(
-      // App Configuration
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
-
-      // Localization
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      themeMode: _getThemeMode(settings.theme),
-
-      // Router Configuration
-      routerConfig: appRouter,
-
-      // App Metadata
-      builder: (context, child) {
-        return MediaQuery(
-          // Ensure text scaling doesn't break layout
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(
-              (settings.fontSizeMultiplier).clamp(0.8, 1.5),
-            ),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-    );
-
-    /* 
     // Uncomment this when you have BLoCs set up:
-    
+
     return MultiBlocProvider(
       providers: [
         // Settings BLoC - Global
         BlocProvider<SettingsBloc>(
-          create: (context) => sl<SettingsBloc>()..add(const LoadSettingsEvent()),
+          create: (context) =>
+              sl<SettingsBloc>()..add(const LoadSettingsEvent()),
         ),
-        // Add other global BLoCs here
+        BlocProvider<TranslationBloc>(
+          create: (context) =>
+              sl<TranslationBloc>()..add(const LoadSupportedLanguagesEvent()),
+        ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, settingsState) {
           // Get settings or use defaults
-          final settings = settingsState is SettingsLoaded 
-              ? settingsState.settings 
+          final settings = settingsState is SettingsLoaded
+              ? settingsState.settings
               : const AppSettings(); // Default settings
 
           return MaterialApp.router(
             // App Configuration
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,
-            
+
             // Localization
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            
-            // Theme Configuration
-            theme: AppTheme.lightShadTheme.materialThemeData,
-            darkTheme: AppTheme.darkShadTheme.materialThemeData,
+
             themeMode: _getThemeMode(settings.theme),
-            
+
             // Router Configuration
             routerConfig: appRouter,
-            
+
             // App Metadata
             builder: (context, child) {
               return MediaQuery(
@@ -181,7 +161,6 @@ class TranslateApp extends StatelessWidget {
         },
       ),
     );
-    */
   }
 
   /// Convert AppTheme enum to ThemeMode

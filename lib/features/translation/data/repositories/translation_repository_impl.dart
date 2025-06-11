@@ -9,8 +9,6 @@ import '../../domain/entities/translation.dart';
 import '../../domain/repositories/translation_repository.dart';
 import '../datasources/translation_local_datasource.dart';
 import '../datasources/translation_remote_datasource.dart';
-import '../models/translation_model.dart';
-import '../models/language_model.dart';
 
 /// Implementation of translation repository
 @LazySingleton(as: TranslationRepository)

@@ -1,42 +1,29 @@
 class ApiConstants {
-  // Base URLs
   static const String defaultLibreTranslateUrl = 'https://libretranslate.com';
-  static const String defaultLibreTranslateApiUrl =
-      'https://libretranslate.com/api/v1';
   static const String localLibreTranslateUrl = 'http://localhost:5000';
-  static const String localLibreTranslateApiUrl =
-      'http://localhost:5000/api/v1';
 
-  // API Endpoints
+  // Updated example URL from the documentation
+  static const String exampleLibreTranslateUrl = 'http://20.51.237.146:5000';
+
+  // API Endpoints - Direct endpoints without /api/v1
   static const String translateEndpoint = '/translate';
   static const String detectEndpoint = '/detect';
   static const String languagesEndpoint = '/languages';
   static const String frontendSettingsEndpoint = '/frontend/settings';
-  static const String suggestEndpoint = '/suggest';
 
-  // HTTP Methods
-  static const String httpGet = 'GET';
-  static const String httpPost = 'POST';
-  static const String httpPut = 'PUT';
-  static const String httpDelete = 'DELETE';
-  static const String httpPatch = 'PATCH';
+  // Query Parameters
+  static const String paramQ = 'q'; // Text to translate
+  static const String paramSource = 'source'; // Source language
+  static const String paramTarget = 'target'; // Target language
+  static const String paramFormat = 'format'; // Format (text/html)
+  static const String paramApiKey = 'api_key'; // API key (required in body)
+  static const String paramAlternatives =
+      'alternatives'; // Number of alternatives
 
-  // Headers
-  static const String contentTypeHeader = 'Content-Type';
-  static const String acceptHeader = 'Accept';
-  static const String authorizationHeader = 'Authorization';
-  static const String userAgentHeader = 'User-Agent';
-  static const String acceptLanguageHeader = 'Accept-Language';
-  static const String cacheControlHeader = 'Cache-Control';
-
-  // Header Values
-  static const String applicationJsonValue = 'application/json';
-  static const String applicationFormUrlencodedValue =
-      'application/x-www-form-urlencoded';
-  static const String multipartFormDataValue = 'multipart/form-data';
-  static const String textPlainValue = 'text/plain';
-  static const String userAgentValue = 'Universal Translator/1.0.0 (Flutter)';
-  static const String noCacheValue = 'no-cache';
+  // Default Parameter Values
+  static const String defaultFormat = 'text';
+  static const int defaultAlternatives = 3;
+  static const String defaultApiKey = ''; // Empty string for no auth
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 30);
@@ -88,20 +75,6 @@ class ApiConstants {
   static const String errorCodeServiceUnavailable = 'SERVICE_UNAVAILABLE';
   static const String errorCodeInvalidRequest = 'INVALID_REQUEST';
 
-  // Query Parameters
-  static const String paramQ = 'q'; // Text to translate
-  static const String paramSource = 'source'; // Source language
-  static const String paramTarget = 'target'; // Target language
-  static const String paramFormat = 'format'; // Format (text/html)
-  static const String paramApiKey = 'api_key'; // API key
-  static const String paramAlternatives =
-      'alternatives'; // Number of alternatives
-  static const String paramConfidence =
-      'confidence'; // Include confidence score
-
-  // Default Parameter Values
-  static const String defaultFormat = 'text';
-  static const int defaultAlternatives = 3;
   static const bool defaultIncludeConfidence = true;
 
   // OCR API Configuration (if using external OCR service)

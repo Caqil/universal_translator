@@ -66,6 +66,7 @@ _i174.GetIt $initGetIt(
     environmentFilter,
   );
   final networkModule = _$NetworkModule();
+  gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient());
   gh.lazySingleton<_i895.Connectivity>(() => networkModule.connectivity);
   gh.lazySingleton<_i973.InternetConnectionChecker>(
       () => networkModule.internetConnectionChecker);
@@ -78,6 +79,8 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i723.SettingsLocalDataSource>(() =>
       _i723.SettingsLocalDataSourceImpl(
           gh<_i979.Box<dynamic>>(instanceName: 'settingsBox')));
+  gh.lazySingleton<_i440.TranslationRemoteDataSource>(
+      () => _i440.TranslationRemoteDataSourceImpl(gh<_i667.DioClient>()));
   gh.lazySingleton<_i334.SpeechDataSource>(() => _i334.SpeechDataSourceImpl(
         gh<_i941.SpeechToText>(),
         gh<_i50.FlutterTts>(),
@@ -90,8 +93,12 @@ _i174.GetIt $initGetIt(
       () => _i723.SettingsMigrationHelper(gh<_i723.SettingsLocalDataSource>()));
   gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i723.SettingsLocalDataSource>()));
-  gh.lazySingleton<_i667.DioClient>(
-      () => _i667.DioClient(gh<_i932.NetworkInfo>()));
+  gh.lazySingleton<_i683.TranslationRepository>(
+      () => _i645.TranslationRepositoryImpl(
+            gh<_i440.TranslationRemoteDataSource>(),
+            gh<_i657.TranslationLocalDataSource>(),
+            gh<_i932.NetworkInfo>(),
+          ));
   gh.lazySingleton<_i921.SpeechRepository>(
       () => _i753.SpeechRepositoryImpl(gh<_i334.SpeechDataSource>()));
   gh.factory<_i339.StopListening>(
@@ -122,6 +129,12 @@ _i174.GetIt $initGetIt(
       () => _i986.UpdateTheme(gh<_i674.SettingsRepository>()));
   gh.factory<_i986.UpdateLanguage>(
       () => _i986.UpdateLanguage(gh<_i674.SettingsRepository>()));
+  gh.factory<_i858.GetSupportedLanguages>(
+      () => _i858.GetSupportedLanguages(gh<_i683.TranslationRepository>()));
+  gh.factory<_i376.DetectLanguage>(
+      () => _i376.DetectLanguage(gh<_i683.TranslationRepository>()));
+  gh.factory<_i301.TranslateText>(
+      () => _i301.TranslateText(gh<_i683.TranslationRepository>()));
   gh.factory<_i585.SettingsBloc>(() => _i585.SettingsBloc(
         gh<_i558.GetSettings>(),
         gh<_i986.UpdateSettings>(),
@@ -137,20 +150,6 @@ _i174.GetIt $initGetIt(
         gh<_i351.TextToSpeech>(),
         gh<_i921.SpeechRepository>(),
       ));
-  gh.lazySingleton<_i440.TranslationRemoteDataSource>(
-      () => _i440.TranslationRemoteDataSourceImpl(gh<_i667.DioClient>()));
-  gh.lazySingleton<_i683.TranslationRepository>(
-      () => _i645.TranslationRepositoryImpl(
-            gh<_i440.TranslationRemoteDataSource>(),
-            gh<_i657.TranslationLocalDataSource>(),
-            gh<_i932.NetworkInfo>(),
-          ));
-  gh.factory<_i858.GetSupportedLanguages>(
-      () => _i858.GetSupportedLanguages(gh<_i683.TranslationRepository>()));
-  gh.factory<_i376.DetectLanguage>(
-      () => _i376.DetectLanguage(gh<_i683.TranslationRepository>()));
-  gh.factory<_i301.TranslateText>(
-      () => _i301.TranslateText(gh<_i683.TranslationRepository>()));
   gh.factory<_i152.TranslationBloc>(() => _i152.TranslationBloc(
         gh<_i301.TranslateText>(),
         gh<_i376.DetectLanguage>(),
