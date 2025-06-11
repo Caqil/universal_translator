@@ -1,5 +1,6 @@
 // lib/core/settings/app_settings.dart
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 
 /// Application settings configuration
 class AppSettings extends Equatable {
@@ -231,7 +232,7 @@ class AppSettings extends Equatable {
   String toString() => 'AppSettings(theme: $theme, language: $language)';
 }
 
-/// App theme modes
+@HiveType(typeId: 1)
 enum AppTheme {
   light,
   dark,
@@ -249,7 +250,7 @@ enum AppTheme {
   }
 }
 
-/// Data usage modes
+@HiveType(typeId: 2)
 enum DataUsageMode {
   low,
   standard,

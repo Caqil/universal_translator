@@ -9,7 +9,9 @@ import 'package:translate_app/config/routes/app_router.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_event.dart';
 
+import 'core/app_theme_adapter.dart';
 import 'core/constants/app_constants.dart';
+import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
 import 'features/settings/data/models/app_settings_model.dart';
@@ -19,6 +21,7 @@ import 'dart:io' show Platform;
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/foundation.dart' show kDebugMode;
 
+import 'features/settings/data/models/settings_model.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';
 import 'features/settings/presentation/bloc/settings_state.dart';
@@ -29,7 +32,7 @@ void main() async {
 
   // Initialize system UI
   await _initializeSystemUI();
-
+  await _registerHiveAdapters();
   // Initialize Hive
   await _initializeHive();
   await CacheRepairUtility.repairAllCaches();
@@ -70,6 +73,14 @@ void main() async {
       child: const TranslateApp(),
     ),
   );
+}
+
+Future<void> _registerHiveAdapters() async {
+  Hive.registerAdapter(SettingsModelAdapter());
+  Hive.registerAdapter(AppThemeAdapter());
+  Hive.registerAdapter(DataUsageModeAdapter());
+
+  print('✅ All Hive adapters registered successfully');
 }
 
 /// Initialize system UI configuration

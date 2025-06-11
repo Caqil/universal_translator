@@ -5,7 +5,6 @@ import 'package:equatable/equatable.dart';
 
 import 'app_settings_model.dart';
 
-
 part 'settings_model.g.dart';
 
 /// Data model for app settings
