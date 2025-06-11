@@ -8,10 +8,13 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
 import 'package:flutter_tts/flutter_tts.dart' as _i50;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:hive/hive.dart' as _i979;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:internet_connection_checker/internet_connection_checker.dart'
+    as _i973;
 import 'package:speech_to_text/speech_to_text.dart' as _i941;
 
 import '../../features/settings/data/datasources/settings_local_datasource.dart'
@@ -62,6 +65,11 @@ _i174.GetIt $initGetIt(
     environment,
     environmentFilter,
   );
+  final networkModule = _$NetworkModule();
+  gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient());
+  gh.lazySingleton<_i895.Connectivity>(() => networkModule.connectivity);
+  gh.lazySingleton<_i973.InternetConnectionChecker>(
+      () => networkModule.internetConnectionChecker);
   gh.lazySingleton<_i657.TranslationLocalDataSource>(
       () => _i657.TranslationLocalDataSourceImpl(
             gh<_i979.Box<dynamic>>(instanceName: 'translationsBox'),
@@ -76,6 +84,10 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i334.SpeechDataSource>(() => _i334.SpeechDataSourceImpl(
         gh<_i941.SpeechToText>(),
         gh<_i50.FlutterTts>(),
+      ));
+  gh.lazySingleton<_i932.NetworkInfo>(() => _i932.NetworkInfoImpl(
+        gh<_i895.Connectivity>(),
+        gh<_i973.InternetConnectionChecker>(),
       ));
   gh.factory<_i723.SettingsMigrationHelper>(
       () => _i723.SettingsMigrationHelper(gh<_i723.SettingsLocalDataSource>()));
@@ -145,3 +157,5 @@ _i174.GetIt $initGetIt(
       ));
   return getIt;
 }
+
+class _$NetworkModule extends _i932.NetworkModule {}

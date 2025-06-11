@@ -12,25 +12,25 @@ import '../../core/utils/extensions.dart';
 class CustomBottomNavBar extends StatelessWidget {
   /// Current selected index
   final int currentIndex;
-  
+
   /// Callback when tab is tapped
   final ValueChanged<int> onTap;
-  
+
   /// Whether to show labels
   final bool showLabels;
-  
+
   /// Custom background color
   final Color? backgroundColor;
-  
+
   /// Custom selected item color
   final Color? selectedItemColor;
-  
+
   /// Custom unselected item color
   final Color? unselectedItemColor;
-  
+
   /// Elevation of the bottom navigation bar
   final double elevation;
-  
+
   /// Whether to use Material 3 navigation bar style
   final bool useMaterial3Style;
 
@@ -49,9 +49,12 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = context.brightness;
-    final effectiveBackgroundColor = backgroundColor ?? AppColors.surface(brightness);
-    final effectiveSelectedColor = selectedItemColor ?? AppColors.primary(brightness);
-    final effectiveUnselectedColor = unselectedItemColor ?? AppColors.mutedForeground(brightness);
+    final effectiveBackgroundColor =
+        backgroundColor ?? AppColors.surface(brightness);
+    final effectiveSelectedColor =
+        selectedItemColor ?? AppColors.primary(brightness);
+    final effectiveUnselectedColor =
+        unselectedItemColor ?? AppColors.mutedForeground(brightness);
 
     final items = _buildNavigationItems(context);
 
@@ -147,12 +150,15 @@ class CustomBottomNavBar extends StatelessWidget {
       showUnselectedLabels: showLabels,
       selectedLabelStyle: AppTextStyles.labelMedium,
       unselectedLabelStyle: AppTextStyles.labelSmall,
-      items: items.map((item) => BottomNavigationBarItem(
-        icon: Icon(item.icon, size: AppConstants.iconSizeRegular),
-        activeIcon: Icon(item.activeIcon ?? item.icon, size: AppConstants.iconSizeRegular),
-        label: item.label,
-        tooltip: item.tooltip,
-      )).toList(),
+      items: items
+          .map((item) => BottomNavigationBarItem(
+                icon: Icon(item.icon, size: AppConstants.iconSizeRegular),
+                activeIcon: Icon(item.activeIcon ?? item.icon,
+                    size: AppConstants.iconSizeRegular),
+                label: item.label,
+                tooltip: item.tooltip,
+              ))
+          .toList(),
     );
   }
 
@@ -161,32 +167,32 @@ class CustomBottomNavBar extends StatelessWidget {
       _NavigationItem(
         icon: Iconsax.translate,
         activeIcon: Iconsax.translate5,
-        label: 'nav_translate'.tr(),
-        tooltip: 'nav_translate_tooltip'.tr(),
+        label: 'navigation.nav_translate'.tr(),
+        tooltip: 'navigation.nav_translate_tooltip'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.camera,
         activeIcon: Iconsax.camera5,
-        label: 'nav_camera'.tr(),
-        tooltip: 'nav_camera_tooltip'.tr(),
+        label: 'navigation.nav_camera'.tr(),
+        tooltip: 'navigation.nav_camera_tooltip'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.message,
         activeIcon: Iconsax.message5,
-        label: 'nav_conversation'.tr(),
-        tooltip: 'nav_conversation_tooltip'.tr(),
+        label: 'navigation.nav_conversation'.tr(),
+        tooltip: 'navigation.nav_conversation_tooltip'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.clock,
         activeIcon: Iconsax.clock5,
-        label: 'nav_history'.tr(),
-        tooltip: 'nav_history_tooltip'.tr(),
+        label: 'navigation.nav_history'.tr(),
+        tooltip: 'navigation.nav_history_tooltip'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.heart,
         activeIcon: Iconsax.heart5,
-        label: 'nav_favorites'.tr(),
-        tooltip: 'nav_favorites_tooltip'.tr(),
+        label: 'navigation.nav_favorites'.tr(),
+        tooltip: 'navigation.nav_favorites_tooltip'.tr(),
       ),
     ];
   }
@@ -240,10 +246,11 @@ class _NavigationBarItem extends StatelessWidget {
               duration: AppConstants.fastAnimationDuration,
               padding: const EdgeInsets.all(AppConstants.smallPadding),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? selectedColor.withOpacity(0.1) 
+                color: isSelected
+                    ? selectedColor.withOpacity(0.1)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
+                borderRadius:
+                    BorderRadius.circular(AppConstants.largeBorderRadius),
               ),
               child: Icon(
                 isSelected ? (item.activeIcon ?? item.icon) : item.icon,

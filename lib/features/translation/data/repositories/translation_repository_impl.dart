@@ -124,7 +124,7 @@ class TranslationRepositoryImpl implements TranslationRepository {
       return Left(NetworkFailure.fromException(e));
     } on ServerException catch (e) {
       return Left(ServerFailure.fromException(e));
-    } on CacheException catch (e) {
+    } on CacheException {
       // If caching fails, still return the data
       try {
         if (await _networkInfo.isConnected) {

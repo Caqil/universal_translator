@@ -1,16 +1,18 @@
+// lib/features/translation/presentation/pages/translation_page.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:translate_app/core/utils/extensions.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/service_locator.dart';
 import '../../../../core/themes/app_colors.dart';
-import '../../../../core/themes/app_text_styles.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/custom_button.dart';
-import '../../../../shared/widgets/error_widget.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../bloc/translation_bloc.dart';
 import '../bloc/translation_event.dart';
@@ -40,14 +42,23 @@ class TranslationView extends StatefulWidget {
 }
 
 class _TranslationViewState extends State<TranslationView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TextEditingController _inputController;
   late AnimationController _swapAnimationController;
   late Animation<double> _swapAnimation;
 
+  // Add debouncing for text changes
+  Timer? _debounceTimer;
+  static const Duration _debounceDuration = Duration(milliseconds: 300);
+
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _setupListeners();
+  }
+
+  void _initializeControllers() {
     _inputController = TextEditingController();
     _swapAnimationController = AnimationController(
       duration: AppConstants.defaultAnimationDuration,
@@ -60,25 +71,39 @@ class _TranslationViewState extends State<TranslationView>
       parent: _swapAnimationController,
       curve: Curves.easeInOut,
     ));
+  }
 
+  void _setupListeners() {
     _inputController.addListener(_onTextChanged);
   }
 
   @override
   void dispose() {
+    // Critical: Dispose all resources properly
+    _debounceTimer?.cancel();
+    _inputController.removeListener(_onTextChanged);
     _inputController.dispose();
     _swapAnimationController.dispose();
     super.dispose();
   }
 
   void _onTextChanged() {
-    final text = _inputController.text;
-    context.read<TranslationBloc>().add(SetSourceTextEvent(text));
+    // Debounce text changes to prevent excessive bloc events
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDuration, () {
+      if (mounted) {
+        final text = _inputController.text;
+        context.read<TranslationBloc>().add(SetSourceTextEvent(text));
+      }
+    });
   }
 
   void _onTranslatePressed() {
     final state = context.read<TranslationBloc>().state;
     if (state.canTranslate) {
+      // Cancel any pending debounce timer before translating
+      _debounceTimer?.cancel();
+
       context.read<TranslationBloc>().add(TranslateTextEvent(
             text: state.sourceText,
             sourceLanguage: state.sourceLanguage,
@@ -87,19 +112,25 @@ class _TranslationViewState extends State<TranslationView>
     }
   }
 
-  void _onSwapLanguages() {
-    _swapAnimationController.forward().then((_) {
+  void _onSwapLanguages() async {
+    // Prevent multiple rapid taps
+    if (_swapAnimationController.isAnimating) return;
+
+    await _swapAnimationController.forward();
+    if (mounted) {
       context.read<TranslationBloc>().add(const SwapLanguagesEvent());
-      _swapAnimationController.reverse();
-    });
+      await _swapAnimationController.reverse();
+    }
   }
 
   void _onClearText() {
+    _debounceTimer?.cancel();
     _inputController.clear();
     context.read<TranslationBloc>().add(const ClearTranslationEvent());
   }
 
   void _onVoiceInput(String text) {
+    _debounceTimer?.cancel();
     _inputController.text = text;
     context.read<TranslationBloc>().add(SetSourceTextEvent(text));
   }
@@ -114,7 +145,7 @@ class _TranslationViewState extends State<TranslationView>
   @override
   Widget build(BuildContext context) {
     final brightness = context.brightness;
-
+    final sonner = ShadSonner.of(context);
     return Scaffold(
       backgroundColor: AppColors.background(brightness),
       appBar: CustomAppBar(
@@ -129,9 +160,19 @@ class _TranslationViewState extends State<TranslationView>
         ],
       ),
       body: BlocConsumer<TranslationBloc, TranslationState>(
+        // Optimize listener to only handle errors and specific state changes
+        listenWhen: (previous, current) {
+          return current.hasError ||
+              (previous.status != current.status &&
+                  current.status == TranslationStatus.initial);
+        },
         listener: (context, state) {
           if (state.hasError) {
-            context.showError(state.errorMessage ?? 'error_general'.tr());
+            sonner.show(
+              ShadToast.destructive(
+                description: Text(state.errorMessage ?? 'error_general'.tr()),
+              ),
+            );
           }
 
           // Update input text when swapping languages
@@ -141,10 +182,18 @@ class _TranslationViewState extends State<TranslationView>
             _inputController.text = state.sourceText;
           }
         },
+        // Optimize builder to reduce unnecessary rebuilds
+        buildWhen: (previous, current) {
+          return previous.status != current.status ||
+              previous.supportedLanguages != current.supportedLanguages ||
+              previous.sourceLanguage != current.sourceLanguage ||
+              previous.targetLanguage != current.targetLanguage ||
+              previous.currentTranslation != current.currentTranslation;
+        },
         builder: (context, state) {
           if (state.status == TranslationStatus.loadingLanguages) {
             return CustomLoadingWidget.page(
-              message: 'loading_languages'.tr(),
+              message: 'loading.loading_languages'.tr(),
             );
           }
 
@@ -161,17 +210,18 @@ class _TranslationViewState extends State<TranslationView>
                     child: Column(
                       children: [
                         // Source Text Input
-                        _buildSourceSection(context, state, brightness),
+                        _buildSourceTextInput(context, state, brightness),
 
-                        const SizedBox(height: AppConstants.largePadding),
+                        const SizedBox(height: AppConstants.defaultPadding),
+
+                        // Translation Output
+                        if (state.currentTranslation != null)
+                          _buildTranslationOutput(context, state, brightness),
+
+                        const SizedBox(height: AppConstants.defaultPadding * 2),
 
                         // Translate Button
                         _buildTranslateButton(context, state, brightness),
-
-                        const SizedBox(height: AppConstants.largePadding),
-
-                        // Translation Output
-                        _buildOutputSection(context, state, brightness),
                       ],
                     ),
                   ),
@@ -193,34 +243,31 @@ class _TranslationViewState extends State<TranslationView>
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
         color: AppColors.surface(brightness),
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.border(brightness),
-            width: 1,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.surface(brightness),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
+        ],
       ),
       child: Row(
         children: [
-          // Source Language Selector
           Expanded(
             child: LanguageSelector(
               selectedLanguage: state.sourceLanguage,
               supportedLanguages: state.supportedLanguages,
-              showAutoDetect: true,
-              onLanguageSelected: (languageCode) {
-                context
-                    .read<TranslationBloc>()
-                    .add(SetSourceLanguageEvent(languageCode));
+              //detectedLanguage: state.detectedLanguage,
+              onLanguageSelected: (language) {
+                context.read<TranslationBloc>().add(
+                      SetSourceLanguageEvent(language),
+                    );
               },
-              label: 'source_language'.tr(),
             ),
           ),
-
-          // Swap Button
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.smallPadding,
+              horizontal: AppConstants.defaultPadding / 2,
             ),
             child: AnimatedBuilder(
               animation: _swapAnimation,
@@ -228,39 +275,23 @@ class _TranslationViewState extends State<TranslationView>
                 return Transform.rotate(
                   angle: _swapAnimation.value * 3.14159,
                   child: IconButton(
-                    onPressed: state.canSwapLanguages ? _onSwapLanguages : null,
+                    onPressed: _onSwapLanguages,
                     icon: const Icon(Iconsax.arrow_swap_horizontal),
-                    iconSize: AppConstants.iconSizeLarge,
-                    tooltip: 'swap_languages'.tr(),
-                    style: IconButton.styleFrom(
-                      backgroundColor: state.canSwapLanguages
-                          ? AppColors.primary(brightness).withOpacity(0.1)
-                          : AppColors.mutedForeground(brightness)
-                              .withOpacity(0.1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.defaultBorderRadius,
-                        ),
-                      ),
-                    ),
+                    tooltip: 'translation.swap_languages'.tr(),
                   ),
                 );
               },
             ),
           ),
-
-          // Target Language Selector
           Expanded(
             child: LanguageSelector(
               selectedLanguage: state.targetLanguage,
               supportedLanguages: state.supportedLanguages,
-              showAutoDetect: false,
-              onLanguageSelected: (languageCode) {
-                context
-                    .read<TranslationBloc>()
-                    .add(SetTargetLanguageEvent(languageCode));
+              onLanguageSelected: (language) {
+                context.read<TranslationBloc>().add(
+                      SetTargetLanguageEvent(language),
+                    );
               },
-              label: 'target_language'.tr(),
             ),
           ),
         ],
@@ -268,67 +299,35 @@ class _TranslationViewState extends State<TranslationView>
     );
   }
 
-  Widget _buildSourceSection(
+  Widget _buildSourceTextInput(
     BuildContext context,
     TranslationState state,
     Brightness brightness,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface(brightness),
-        borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-        border: Border.all(
-          color: AppColors.border(brightness),
-          width: 1,
-        ),
+    return Card(
+      elevation: 2,
+      child: TranslationInput(
+        controller: _inputController,
+        onVoiceInput: _onVoiceInput,
+        sourceLanguage: state.sourceLanguage,
+        detectedLanguage: state.detectedLanguage,
+        isListening: false, // Manage voice input state separately
+        onTextCleared: _onClearText,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with actions
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'enter_text'.tr(),
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.primary(brightness),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (state.sourceLanguage == 'auto' &&
-                    _inputController.text.isNotEmpty) ...[
-                  CustomButton(
-                    text: 'detect_language'.tr(),
-                    onPressed: _onDetectLanguage,
-                    variant: ButtonVariant.outline,
-                    size: ButtonSize.small,
-                    icon: Iconsax.search_status,
-                    isLoading:
-                        state.status == TranslationStatus.detectingLanguage,
-                  ),
-                ],
-              ],
-            ),
-          ),
+    );
+  }
 
-          const Divider(height: 1),
-
-          // Text Input
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: TranslationInput(
-              controller: _inputController,
-              onVoiceInput: _onVoiceInput,
-              sourceLanguage: state.sourceLanguage,
-              detectedLanguage: state.detectedLanguage,
-              isListening: false, // This would come from speech bloc
-            ),
-          ),
-        ],
+  Widget _buildTranslationOutput(
+    BuildContext context,
+    TranslationState state,
+    Brightness brightness,
+  ) {
+    return Card(
+      elevation: 2,
+      child: TranslationOutput(
+        translation: state.currentTranslation!,
+        targetLanguage: state.targetLanguage,
+        supportedLanguages: state.supportedLanguages,
       ),
     );
   }
@@ -338,88 +337,14 @@ class _TranslationViewState extends State<TranslationView>
     TranslationState state,
     Brightness brightness,
   ) {
-    return CustomButton(
-      text: 'translate'.tr(),
-      onPressed: state.canTranslate ? _onTranslatePressed : null,
-      variant: ButtonVariant.primary,
-      size: ButtonSize.large,
-      fullWidth: true,
-      icon: Iconsax.translate,
-      isLoading: state.status == TranslationStatus.translating,
-      isDisabled: !state.canTranslate,
-    );
-  }
-
-  Widget _buildOutputSection(
-    BuildContext context,
-    TranslationState state,
-    Brightness brightness,
-  ) {
-    if (state.status == TranslationStatus.translating) {
-      return Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: AppColors.surface(brightness),
-          borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-          border: Border.all(
-            color: AppColors.border(brightness),
-            width: 1,
-          ),
-        ),
-        child: Center(
-          child: CustomLoadingWidget.translation(
-            message: 'translating_text'.tr(),
-          ),
-        ),
-      );
-    }
-
-    if (state.hasError) {
-      return CustomErrorWidget.translation(
-        message: state.errorMessage,
-        onRetry: _onTranslatePressed,
-        variant: ErrorVariant.card,
-      );
-    }
-
-    if (!state.hasTranslation) {
-      return Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: AppColors.surface(brightness),
-          borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
-          border: Border.all(
-            color: AppColors.border(brightness),
-            width: 1,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Iconsax.translate,
-                size: AppConstants.iconSizeExtraLarge,
-                color: AppColors.mutedForeground(brightness),
-              ),
-              const SizedBox(height: AppConstants.defaultPadding),
-              Text(
-                'translation_placeholder'.tr(),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.mutedForeground(brightness),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return TranslationOutput(
-      translation: state.currentTranslation!,
-      targetLanguage: state.targetLanguage,
-      supportedLanguages: state.supportedLanguages,
+    return SizedBox(
+      width: double.infinity,
+      child: CustomButton(
+        text: 'translation.translate'.tr(),
+        onPressed: state.canTranslate ? _onTranslatePressed : null,
+        isLoading: state.status == TranslationStatus.translating,
+        icon: Iconsax.language_circle,
+      ),
     );
   }
 }

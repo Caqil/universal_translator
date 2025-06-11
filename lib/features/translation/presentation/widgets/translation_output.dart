@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:ui' as ui;
 
@@ -91,10 +92,16 @@ class _TranslationOutputState extends State<TranslationOutput>
   }
 
   void _onCopyPressed() async {
+    final sonner = ShadSonner.of(context);
     await Clipboard.setData(
         ClipboardData(text: widget.translation.translatedText));
     if (mounted) {
-      context.showSuccess('text_copied'.tr());
+      sonner.show(
+        ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('paste_failed'.tr()),
+        ),
+      );
     }
   }
 
@@ -246,7 +253,7 @@ ${AppConstants.appName}
             onPressed: _onFullScreenPressed,
             icon: const Icon(Iconsax.maximize_4),
             iconSize: AppConstants.iconSizeRegular,
-            tooltip: 'view_fullscreen'.tr(),
+            tooltip: 'translation.view_fullscreen'.tr(),
           ),
         ],
       ),
@@ -270,14 +277,14 @@ ${AppConstants.appName}
     final alternatives = widget.translation.alternatives!;
     final displayAlternatives =
         alternatives.take(3).toList(); // Show max 3 alternatives
-
+    final sonner = ShadSonner.of(context);
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'alternatives'.tr(),
+            'translation.alternatives'.tr(),
             style: AppTextStyles.labelMedium.copyWith(
               color: AppColors.mutedForeground(brightness),
               fontWeight: FontWeight.w600,
@@ -298,7 +305,12 @@ ${AppConstants.appName}
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: alternative));
                   if (mounted) {
-                    context.showSuccess('alternative_copied'.tr());
+                    sonner.show(
+                      ShadToast.raw(
+                        variant: ShadToastVariant.primary,
+                        description: Text('alternative_copied'.tr()),
+                      ),
+                    );
                   }
                 },
                 borderRadius:
@@ -369,7 +381,7 @@ ${AppConstants.appName}
 
           // Share button
           CustomButton(
-            text: 'share'.tr(),
+            text: 'common.share'.tr(),
             onPressed: _onSharePressed,
             variant: ButtonVariant.outline,
             size: ButtonSize.small,
@@ -390,8 +402,9 @@ ${AppConstants.appName}
                     : AppColors.mutedForeground(brightness),
               ),
               iconSize: AppConstants.iconSizeRegular,
-              tooltip:
-                  widget.isSpeaking ? 'stop_speaking'.tr() : 'speak_text'.tr(),
+              tooltip: widget.isSpeaking
+                  ? 'translation.stop_speaking'.tr()
+                  : 'translation.speak_text'.tr(),
             ),
           ],
 
@@ -406,8 +419,8 @@ ${AppConstants.appName}
             ),
             iconSize: AppConstants.iconSizeRegular,
             tooltip: widget.isFavorite
-                ? 'remove_from_favorites'.tr()
-                : 'add_to_favorites'.tr(),
+                ? 'favorites.remove_from_favorites'.tr()
+                : 'favorites.add_to_favorites'.tr(),
           ),
         ],
       ),

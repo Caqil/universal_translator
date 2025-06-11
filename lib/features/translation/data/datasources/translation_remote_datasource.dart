@@ -1,9 +1,11 @@
+// lib/features/translation/data/datasources/translation_remote_datasource.dart
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/app_utils.dart';
+import '../../../../core/utils/language_data_converter.dart';
 import '../models/translation_model.dart';
 import '../models/language_model.dart';
 
@@ -89,7 +91,7 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
 
       final translatedText = responseData['translatedText'] as String;
 
-      // Handle detectedLanguage object structure
+      // Handle detectedLanguage object structure safely
       String? detectedLanguageCode;
       if (responseData.containsKey('detectedLanguage')) {
         final detectedLang = responseData['detectedLanguage'];
@@ -194,31 +196,64 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
     try {
       final response = await _dioClient.get(ApiConstants.languagesEndpoint);
 
-      final responseData = response.data as List<dynamic>;
+      final responseData = response.data;
       final languages = <LanguageModel>[];
 
-      for (final langData in responseData) {
-        try {
-          final langMap = langData as Map<String, dynamic>;
-          final code = langMap['code'] as String;
-          final name = langMap['name'] as String;
+      // Handle different response formats
+      if (responseData is List<dynamic>) {
+        // Standard LibreTranslate format
+        for (final langData in responseData) {
+          try {
+            if (langData is Map<String, dynamic>) {
+              final code = langData['code'] as String?;
+              final name = langData['name'] as String?;
 
-          // Create language model
-          languages.add(LanguageModel(
-            code: code,
-            name: name,
-            nativeName: name, // LibreTranslate doesn't provide native names
-            flag: _getLanguageFlag(code),
-            isRtl: _isRightToLeft(code),
-            family: 'Unknown',
-            supportsSTT: false,
-            supportsTTS: false,
-            supportsOCR: false,
-          ));
-        } catch (e) {
-          // Skip invalid language entries
-          continue;
+              if (code != null && name != null) {
+                // Create language model with proper field mapping
+                languages.add(LanguageModel(
+                  code: code,
+                  name: name,
+                  nativeName:
+                      name, // LibreTranslate doesn't provide native names
+                  flag: _getLanguageFlag(code),
+                  isRtl: _isRightToLeft(code),
+                  family: 'Unknown',
+                  supportsSTT: false,
+                  supportsTTS: false,
+                  supportsOCR: false,
+                ));
+              }
+            }
+          } catch (e) {
+            // Skip invalid language entries and continue
+            print('Warning: Skipped invalid language entry: $e');
+            continue;
+          }
         }
+      } else if (responseData is String) {
+        // If response is a JSON string (like your paste.txt format)
+        try {
+          languages.addAll(
+              LanguageDataConverter.convertJsonToLanguageModels(responseData));
+        } catch (e) {
+          throw ServerException(
+            message: 'Failed to parse language data: ${e.toString()}',
+            code: 'INVALID_LANGUAGE_FORMAT',
+          );
+        }
+      } else {
+        throw const ServerException(
+          message: 'Unexpected response format for languages endpoint',
+          code: 'INVALID_RESPONSE_FORMAT',
+        );
+      }
+
+      // Ensure we have at least some languages
+      if (languages.isEmpty) {
+        throw const ServerException(
+          message: 'No valid languages found in response',
+          code: 'NO_LANGUAGES_FOUND',
+        );
       }
 
       // Sort languages alphabetically
@@ -281,10 +316,13 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
       'de': '🇩🇪',
       'it': '🇮🇹',
       'pt': '🇵🇹',
+      'pt-BR': '🇧🇷',
       'ru': '🇷🇺',
       'ja': '🇯🇵',
       'ko': '🇰🇷',
       'zh': '🇨🇳',
+      'zh-Hans': '🇨🇳',
+      'zh-Hant': '🇹🇼',
       'ar': '🇸🇦',
       'hi': '🇮🇳',
       'tr': '🇹🇷',
@@ -293,6 +331,7 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
       'sv': '🇸🇪',
       'da': '🇩🇰',
       'no': '🇳🇴',
+      'nb': '🇳🇴',
       'fi': '🇫🇮',
       'cs': '🇨🇿',
       'hu': '🇭🇺',
@@ -310,6 +349,19 @@ class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
       'th': '🇹🇭',
       'vi': '🇻🇳',
       'uk': '🇺🇦',
+      'ur': '🇵🇰',
+      'fa': '🇮🇷',
+      'he': '🇮🇱',
+      'ga': '🇮🇪',
+      'gl': '🇪🇸',
+      'ca': '🇪🇸',
+      'eu': '🇪🇸',
+      'sq': '🇦🇱',
+      'az': '🇦🇿',
+      'bn': '🇧🇩',
+      'eo': '🌍',
+      'el': '🇬🇷',
+      'tl': '🇵🇭',
     };
 
     return flags[code] ?? '🌍';

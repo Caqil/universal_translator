@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:iconsax/iconsax.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/themes/app_colors.dart';

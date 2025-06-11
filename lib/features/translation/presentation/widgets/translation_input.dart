@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'dart:ui' as ui;
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/language_constants.dart';
@@ -134,6 +135,7 @@ class _TranslationInputState extends State<TranslationInput>
   }
 
   void _onPastePressed() async {
+    final sonner = ShadSonner.of(context);
     try {
       final clipboardData = await Clipboard.getData('text/plain');
       if (clipboardData?.text != null) {
@@ -143,12 +145,21 @@ class _TranslationInputState extends State<TranslationInput>
 
         // Show feedback
         if (mounted) {
-          context.showSuccess('text_pasted'.tr());
+          sonner.show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('text_pasted'.tr()),
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        context.showError('paste_failed'.tr());
+        sonner.show(
+          ShadToast.destructive(
+            description: Text('paste_failed'.tr()),
+          ),
+        );
       }
     }
   }
@@ -190,6 +201,7 @@ class _TranslationInputState extends State<TranslationInput>
               children: [
                 // Main text input area
                 TextField(
+                  onTapUpOutside: (event) => _focusNode.unfocus(),
                   controller: widget.controller,
                   focusNode: _focusNode,
                   maxLines: null,
@@ -199,8 +211,8 @@ class _TranslationInputState extends State<TranslationInput>
                     color: AppColors.primary(brightness),
                   ),
                   decoration: InputDecoration(
-                    hintText:
-                        widget.placeholder ?? 'enter_text_to_translate'.tr(),
+                    hintText: widget.placeholder ??
+                        'translation.enter_text_to_translate'.tr(),
                     hintStyle: AppTextStyles.translationInput.copyWith(
                       color: AppColors.mutedForeground(brightness),
                     ),

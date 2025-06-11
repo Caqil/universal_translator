@@ -6,7 +6,6 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../shared/widgets/custom_button.dart';
 
 /// Types of settings tiles
 enum SettingsTileType {

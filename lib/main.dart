@@ -4,12 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:translate_app/config/routes/app_router.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_event.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/services/injection_container.dart';
+import 'core/utils/cache_repair_utility.dart';
 import 'features/settings/data/models/app_settings_model.dart';
 
 /// Import for development utilities
@@ -30,7 +32,7 @@ void main() async {
 
   // Initialize Hive
   await _initializeHive();
-
+  await CacheRepairUtility.repairAllCaches();
   try {
     await init();
     debugPrint('✅ App initialization completed successfully');
@@ -118,10 +120,10 @@ class TranslateApp extends StatelessWidget {
           create: (context) =>
               sl<SettingsBloc>()..add(const LoadSettingsEvent()),
         ),
-        // BlocProvider<TranslationBloc>(
-        //   create: (context) =>
-        //       sl<TranslationBloc>()..add(const LoadSupportedLanguagesEvent()),
-        // ),
+        BlocProvider<TranslationBloc>(
+          create: (context) =>
+              sl<TranslationBloc>()..add(const LoadSupportedLanguagesEvent()),
+        ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, settingsState) {
@@ -130,7 +132,7 @@ class TranslateApp extends StatelessWidget {
               ? settingsState.settings
               : const AppSettings(); // Default settings
 
-          return MaterialApp.router(
+          return ShadApp.router(
             // App Configuration
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,
@@ -242,33 +244,4 @@ class CustomErrorWidget extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Global error handler
-void _setupGlobalErrorHandling() {
-  // Handle Flutter framework errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-
-    // Log to crashlytics in production
-    // FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-
-    // Show custom error widget in debug mode
-    if (kDebugMode) {
-      FlutterError.presentError(details);
-    }
-  };
-
-  // Handle platform errors
-  PlatformDispatcher.instance.onError = (error, stack) {
-    // Log to crashlytics in production
-    // FirebaseCrashlytics.instance.recordError(error, stack);
-
-    if (kDebugMode) {
-      debugPrint('Platform Error: $error');
-      debugPrint('Stack Trace: $stack');
-    }
-
-    return true;
-  };
 }

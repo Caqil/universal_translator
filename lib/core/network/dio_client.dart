@@ -1,8 +1,11 @@
-// lib/core/network/dio_client.dart
+// lib/core/network/dio_client.dart - Minimal version with @injectable
 import 'package:dio/dio.dart';
-import '../constants/api_constants.dart';
-import '../error/exceptions.dart';
+import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 
+import '../constants/api_constants.dart';
+
+@LazySingleton()
 class DioClient {
   final Dio _dio;
   String? _apiKey;
@@ -15,6 +18,9 @@ class DioClient {
 
   void _initializeDio() {
     _dio.options = BaseOptions(
+      // Use the API constants for base URL - defaults to your working server
+      baseUrl:
+          ApiConstants.exampleLibreTranslateUrl, // http://20.51.237.146:5000
       connectTimeout: ApiConstants.connectionTimeout,
       receiveTimeout: ApiConstants.receiveTimeout,
       sendTimeout: ApiConstants.sendTimeout,
@@ -27,18 +33,14 @@ class DioClient {
       maxRedirects: 3,
     );
 
-    // Add interceptors
-    _dio.interceptors.addAll([
-      _NetworkInterceptor(),
-      _LoggingInterceptor(),
-      _ErrorInterceptor(),
-    ]);
-  }
+    // Add basic interceptors
+    _dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+    ));
 
-  /// Update base URL for LibreTranslate API
-  void updateBaseUrl(String baseUrl) {
-    final cleanUrl = baseUrl.replaceAll(RegExp(r'/+$'), '');
-    _dio.options.baseUrl = cleanUrl;
+    debugPrint(
+        '🌐 DioClient initialized with base URL: ${ApiConstants.exampleLibreTranslateUrl}');
   }
 
   /// Update API key for authentication
@@ -53,16 +55,12 @@ class DioClient {
     Options? options,
     CancelToken? cancelToken,
   }) async {
-    try {
-      return await _dio.get<T>(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
+    return await _dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   /// POST request with API key in body
@@ -73,24 +71,20 @@ class DioClient {
     Options? options,
     CancelToken? cancelToken,
   }) async {
-    try {
-      // Add API key to request body if available
-      if (data is Map<String, dynamic> &&
-          _apiKey != null &&
-          _apiKey!.isNotEmpty) {
-        data['api_key'] = _apiKey!;
-      }
-
-      return await _dio.post<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-    } catch (e) {
-      throw _handleError(e);
+    // Add API key to request body if available
+    if (data is Map<String, dynamic> &&
+        _apiKey != null &&
+        _apiKey!.isNotEmpty) {
+      data['api_key'] = _apiKey!;
     }
+
+    return await _dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   /// PUT request
@@ -101,17 +95,13 @@ class DioClient {
     Options? options,
     CancelToken? cancelToken,
   }) async {
-    try {
-      return await _dio.put<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
+    return await _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 
   /// DELETE request
@@ -122,81 +112,12 @@ class DioClient {
     Options? options,
     CancelToken? cancelToken,
   }) async {
-    try {
-      return await _dio.delete<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Exception _handleError(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-          return NetworkException(
-            message: 'Connection timeout',
-            code: 'TIMEOUT',
-          );
-        case DioExceptionType.connectionError:
-          return NetworkException(
-            message: 'No internet connection',
-            code: 'NO_CONNECTION',
-          );
-        case DioExceptionType.badResponse:
-          return ServerException(
-            message: error.response?.data['message'] ?? 'Server error',
-            code: 'SERVER_ERROR_${error.response?.statusCode}',
-          );
-        default:
-          return NetworkException(
-            message: error.message ?? 'Unknown network error',
-            code: 'UNKNOWN_NETWORK_ERROR',
-          );
-      }
-    }
-    return Exception('Unknown error: $error');
-  }
-}
-
-// Simple interceptors
-class _NetworkInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    handler.next(options);
-  }
-}
-
-class _LoggingInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    print('🌐 ${options.method} ${options.uri}');
-    handler.next(options);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    print('✅ ${response.statusCode} ${response.requestOptions.uri}');
-    handler.next(response);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    print('❌ ${err.response?.statusCode} ${err.requestOptions.uri}');
-    handler.next(err);
-  }
-}
-
-class _ErrorInterceptor extends Interceptor {
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    handler.next(err);
+    return await _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+      cancelToken: cancelToken,
+    );
   }
 }

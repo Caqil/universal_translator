@@ -1,20 +1,36 @@
+// lib/core/services/service_locator.dart - Enhanced with debugging
 import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
-/// Service locator wrapper for GetIt
-/// Provides a cleaner interface for dependency access
+/// Service locator wrapper for GetIt with enhanced error handling
 class ServiceLocator {
   static final GetIt _getIt = GetIt.instance;
 
-  /// Get service instance
+  /// Get service instance with detailed error reporting
   static T get<T extends Object>({String? instanceName}) {
     try {
+      // Check if the service is registered first
+      if (!_getIt.isRegistered<T>(instanceName: instanceName)) {
+        _debugPrintAvailableServices();
+        throw ServiceLocatorException(
+          'Service of type ${T.toString()} ${instanceName != null ? 'with name "$instanceName" ' : ''}is not registered.\n'
+          'Available services have been printed to the debug console.',
+        );
+      }
+
       return _getIt.get<T>(instanceName: instanceName);
     } catch (e) {
+      debugPrint('❌ Failed to get service ${T.toString()}: $e');
+
+      if (e is ServiceLocatorException) {
+        rethrow;
+      }
+
       throw ServiceLocatorException(
-        'Service of type ${T.toString()} ${instanceName != null ? 'with name "$instanceName" ' : ''}not found. '
-        'Make sure it is registered in the dependency injection container.',
+        'Service of type ${T.toString()} ${instanceName != null ? 'with name "$instanceName" ' : ''}failed to initialize.\n'
+        'Error: ${e.toString()}\n'
+        'This usually means one of its dependencies failed to initialize.',
       );
     }
   }
@@ -24,6 +40,7 @@ class ServiceLocator {
     try {
       return await _getIt.getAsync<T>(instanceName: instanceName);
     } catch (e) {
+      debugPrint('❌ Failed to get async service ${T.toString()}: $e');
       throw ServiceLocatorException(
         'Async service of type ${T.toString()} ${instanceName != null ? 'with name "$instanceName" ' : ''}not found. '
         'Make sure it is registered in the dependency injection container.',
@@ -36,17 +53,35 @@ class ServiceLocator {
     return _getIt.isRegistered<T>(instanceName: instanceName);
   }
 
+  /// Get service safely with fallback
+  static T? getSafe<T extends Object>({String? instanceName}) {
+    try {
+      return get<T>(instanceName: instanceName);
+    } catch (e) {
+      debugPrint(
+          '⚠️ Failed to get service ${T.toString()}, returning null: $e');
+      return null;
+    }
+  }
+
   /// Register a singleton service
   static void registerSingleton<T extends Object>(
     T instance, {
     String? instanceName,
     bool signalsReady = false,
   }) {
-    _getIt.registerSingleton<T>(
-      instance,
-      instanceName: instanceName,
-      signalsReady: signalsReady,
-    );
+    try {
+      _getIt.registerSingleton<T>(
+        instance,
+        instanceName: instanceName,
+        signalsReady: signalsReady,
+      );
+      debugPrint(
+          '✅ Registered singleton: ${T.toString()}${instanceName != null ? ' ($instanceName)' : ''}');
+    } catch (e) {
+      debugPrint('❌ Failed to register singleton ${T.toString()}: $e');
+      rethrow;
+    }
   }
 
   /// Register a lazy singleton service
@@ -54,10 +89,17 @@ class ServiceLocator {
     T Function() factoryFunc, {
     String? instanceName,
   }) {
-    _getIt.registerLazySingleton<T>(
-      factoryFunc,
-      instanceName: instanceName,
-    );
+    try {
+      _getIt.registerLazySingleton<T>(
+        factoryFunc,
+        instanceName: instanceName,
+      );
+      debugPrint(
+          '✅ Registered lazy singleton: ${T.toString()}${instanceName != null ? ' ($instanceName)' : ''}');
+    } catch (e) {
+      debugPrint('❌ Failed to register lazy singleton ${T.toString()}: $e');
+      rethrow;
+    }
   }
 
   /// Register a factory service
@@ -65,10 +107,17 @@ class ServiceLocator {
     T Function() factoryFunc, {
     String? instanceName,
   }) {
-    _getIt.registerFactory<T>(
-      factoryFunc,
-      instanceName: instanceName,
-    );
+    try {
+      _getIt.registerFactory<T>(
+        factoryFunc,
+        instanceName: instanceName,
+      );
+      debugPrint(
+          '✅ Registered factory: ${T.toString()}${instanceName != null ? ' ($instanceName)' : ''}');
+    } catch (e) {
+      debugPrint('❌ Failed to register factory ${T.toString()}: $e');
+      rethrow;
+    }
   }
 
   /// Unregister a service
@@ -130,6 +179,59 @@ class ServiceLocator {
   /// Clear scope
   static Future<void> clearScope([String? scopeName]) async {
     await _getIt.dropScope(scopeName!);
+  }
+
+  /// Debug: Print all registered services
+  static void _debugPrintAvailableServices() {
+    if (!kDebugMode) return;
+
+    debugPrint('📋 Currently registered services:');
+
+    // Get all registered service types (this is a simplified version)
+    // Note: GetIt doesn't provide direct access to all registered types,
+    // so we'll check common ones
+    final commonTypes = [
+      'TranslationBloc',
+      'SettingsBloc',
+      'SpeechBloc',
+      'TranslationRepository',
+      'SettingsRepository',
+      'SpeechRepository',
+      'DioClient',
+      'NetworkInfo',
+      'SharedPreferences',
+      'Box',
+    ];
+
+    for (final type in commonTypes) {
+      try {
+        // This is a workaround since GetIt doesn't expose all registered types
+        debugPrint(
+            '   - $type: ${_getIt.isRegistered(instanceName: type) ? '✅' : '❌'}');
+      } catch (e) {
+        debugPrint('   - $type: ❓ (could not check)');
+      }
+    }
+  }
+
+  /// Validate critical dependencies
+  static bool validateCriticalDependencies() {
+    final criticalDependencies = [
+      'SharedPreferences',
+      'DioClient',
+      'NetworkInfo',
+    ];
+
+    bool allValid = true;
+
+    for (final dependency in criticalDependencies) {
+      if (!_getIt.isRegistered(instanceName: dependency)) {
+        debugPrint('❌ Critical dependency missing: $dependency');
+        allValid = false;
+      }
+    }
+
+    return allValid;
   }
 }
 

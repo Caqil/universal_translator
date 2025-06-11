@@ -321,7 +321,7 @@ class _LanguageSelectorModalState extends State<_LanguageSelectorModal> {
               children: [
                 Expanded(
                   child: Text(
-                    'select_language'.tr(),
+                    'languages.select_language'.tr(),
                     style: AppTextStyles.titleLarge.copyWith(
                       color: AppColors.primary(brightness),
                       fontWeight: FontWeight.w600,
@@ -341,7 +341,7 @@ class _LanguageSelectorModalState extends State<_LanguageSelectorModal> {
             padding: const EdgeInsets.all(AppConstants.defaultPadding),
             child: CustomTextField(
               controller: _searchController,
-              hint: 'search_languages'.tr(),
+              hint: 'languages.search_languages'.tr(),
               prefixIcon: Iconsax.search_normal,
               variant: TextFieldVariant.outlined,
             ),
@@ -357,8 +357,8 @@ class _LanguageSelectorModalState extends State<_LanguageSelectorModal> {
                 children: [
                   CustomButton(
                     text: _showPopular
-                        ? 'show_all_languages'.tr()
-                        : 'show_popular'.tr(),
+                        ? 'languages.show_all_languages'.tr()
+                        : 'languages.show_popular'.tr(),
                     onPressed: _toggleShowAllLanguages,
                     variant: ButtonVariant.outline,
                     size: ButtonSize.small,
@@ -366,7 +366,7 @@ class _LanguageSelectorModalState extends State<_LanguageSelectorModal> {
                   ),
                   const Spacer(),
                   Text(
-                    '${_filteredLanguages.length} ${'languages'.tr()}',
+                    '${_filteredLanguages.length} ${'languages'}',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.mutedForeground(brightness),
                     ),

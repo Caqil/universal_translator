@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_colors.dart';
@@ -195,8 +196,13 @@ class _SpeechButtonState extends State<SpeechButton> {
   }
 
   void _showError(String message) {
+    final sonner = ShadSonner.of(context);
     widget.onError?.call(message);
-    context.showError(message);
+    sonner.show(
+      ShadToast.destructive(
+        description: Text(message),
+      ),
+    );
   }
 
   @override
@@ -398,14 +404,14 @@ class _SpeechButtonState extends State<SpeechButton> {
     switch (widget.mode) {
       case SpeechButtonMode.speechToText:
         if (state.isListening) return 'stop_listening'.tr();
-        return 'start_listening'.tr();
+        return 'translation.start_listening'.tr();
       case SpeechButtonMode.textToSpeech:
         if (state.isSpeaking) return 'stop_speaking'.tr();
-        return 'speak_text'.tr();
+        return 'translation.speak_text'.tr();
       case SpeechButtonMode.both:
         if (state.isListening) return 'stop_listening'.tr();
         if (state.isSpeaking) return 'stop_speaking'.tr();
-        return 'voice_input'.tr();
+        return 'voice.voice_input'.tr();
     }
   }
 

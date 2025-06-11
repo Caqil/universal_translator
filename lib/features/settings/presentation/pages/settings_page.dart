@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_colors.dart';
@@ -58,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   Widget build(BuildContext context) {
     final brightness = context.brightness;
-
+    final sonner = ShadSonner.of(context);
     return Scaffold(
       backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
@@ -92,9 +93,25 @@ class _SettingsPageState extends State<SettingsPage>
       body: BlocConsumer<SettingsBloc, SettingsState>(
         listener: (context, state) {
           if (state is SettingsOperationCompleted) {
-            context.showSuccess(state.message);
+            sonner.show(
+              ShadToast(
+                description: Text(state.message),
+                action: ShadButton(
+                  child: const Text('Undo'),
+                  onPressed: () => sonner.hide(state.message),
+                ),
+              ),
+            );
           } else if (state is SettingsError) {
-            context.showError(state.message);
+            sonner.show(
+              ShadToast(
+                description: Text(state.message),
+                action: ShadButton(
+                  child: const Text('Undo'),
+                  onPressed: () => sonner.hide(state.message),
+                ),
+              ),
+            );
           }
         },
         builder: (context, state) {
@@ -424,7 +441,7 @@ class _SettingsPageState extends State<SettingsPage>
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
-              'settings_error'.tr(),
+              'settings.settings_error'.tr(),
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.primary(brightness),
               ),
@@ -443,6 +460,9 @@ class _SettingsPageState extends State<SettingsPage>
               text: 'retry'.tr(),
               onPressed: () {
                 context.read<SettingsBloc>().add(const LoadSettingsEvent());
+                debugPrint(
+                  state.message,
+                );
               },
               variant: ButtonVariant.primary,
               icon: Iconsax.refresh,
