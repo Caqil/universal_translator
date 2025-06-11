@@ -6,7 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:translate_app/config/routes/app_router.dart';
-import 'package:translate_app/core/themes/app_colors.dart';
+import 'package:translate_app/features/speech/presentation/bloc/speech_bloc.dart';
+import 'package:translate_app/features/speech/presentation/bloc/speech_event.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_event.dart';
 
@@ -15,13 +16,7 @@ import 'core/constants/app_constants.dart';
 import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
-import 'core/themes/app_theme.dart' as appTheme;
 import 'features/settings/data/models/app_settings_model.dart';
-
-/// Import for development utilities
-import 'dart:io' show Platform;
-import 'dart:ui' show PlatformDispatcher;
-import 'package:flutter/foundation.dart' show kDebugMode;
 
 import 'features/settings/data/models/settings_model.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
@@ -160,6 +155,10 @@ class TranslateApp extends StatelessWidget {
         BlocProvider<TranslationBloc>(
           create: (context) =>
               sl<TranslationBloc>()..add(const LoadSupportedLanguagesEvent()),
+        ),
+        BlocProvider<SpeechBloc>(
+          create: (context) =>
+              sl<SpeechBloc>()..add(const InitializeSpeechEvent()),
         ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(

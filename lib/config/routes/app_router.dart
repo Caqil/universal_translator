@@ -58,11 +58,11 @@ final GoRouter appRouter = GoRouter(
         ),
 
         // Camera tab
-        GoRoute(
-          path: RouteNames.camera,
-          name: 'camera',
-          builder: (context, state) => const CameraPage(),
-        ),
+        // GoRoute(
+        //   path: RouteNames.camera,
+        //   name: 'camera',
+        //   builder: (context, state) => const CameraPage(),
+        // ),
 
         // Conversation tab
         GoRoute(
