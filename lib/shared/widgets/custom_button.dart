@@ -300,21 +300,15 @@ class _CustomButtonState extends State<CustomButton>
       case ButtonVariant.primary:
         return _ButtonColors(
           backgroundColor: AppColors.primary(brightness),
-          foregroundColor: brightness == Brightness.light
-              ? AppColors.lightPrimaryForeground
-              : AppColors.darkPrimaryForeground,
+          foregroundColor: AppColors.surface(brightness),
           disabledForegroundColor: AppColors.mutedForeground(brightness),
           elevation: AppConstants.defaultElevation,
         );
 
       case ButtonVariant.secondary:
         return _ButtonColors(
-          backgroundColor: brightness == Brightness.light
-              ? AppColors.lightSecondary
-              : AppColors.darkSecondary,
-          foregroundColor: brightness == Brightness.light
-              ? AppColors.lightSecondaryForeground
-              : AppColors.darkSecondaryForeground,
+          backgroundColor: AppColors.primary(brightness),
+          foregroundColor: AppColors.surface(brightness),
           disabledForegroundColor: AppColors.mutedForeground(brightness),
           elevation: 0,
         );

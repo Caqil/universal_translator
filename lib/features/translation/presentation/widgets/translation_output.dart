@@ -99,7 +99,7 @@ class _TranslationOutputState extends State<TranslationOutput>
       sonner.show(
         ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('paste_failed'.tr()),
+          description: Text('translation.copy_translation'.tr()),
         ),
       );
     }
@@ -168,7 +168,7 @@ ${AppConstants.appName}
               _buildAlternatives(context, brightness),
             ],
 
-            const Divider(height: 1),
+            const Divider(height: 0.2),
 
             // Action buttons
             _buildActionButtons(context, brightness),
@@ -357,7 +357,7 @@ ${AppConstants.appName}
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -381,7 +381,7 @@ ${AppConstants.appName}
 
           // Share button
           CustomButton(
-            text: 'common.share'.tr(),
+            text: 'app.share'.tr(),
             onPressed: _onSharePressed,
             variant: ButtonVariant.outline,
             size: ButtonSize.small,

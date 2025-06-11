@@ -1,11 +1,16 @@
+// lib/features/onboarding/presentation/pages/onboarding_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/user_preferences_service.dart';
+import '../../../../core/services/permission_service.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
@@ -18,6 +23,9 @@ class OnboardingData {
   final IconData icon;
   final List<Color> gradientColors;
   final String? description;
+  final bool isPermissionPage;
+  final Permission? permission;
+  final VoidCallback? onPermissionRequest;
 
   const OnboardingData({
     required this.title,
@@ -25,10 +33,13 @@ class OnboardingData {
     required this.icon,
     required this.gradientColors,
     this.description,
+    this.isPermissionPage = false,
+    this.permission,
+    this.onPermissionRequest,
   });
 }
 
-/// Onboarding page with multiple introduction screens
+/// Onboarding page with multiple introduction screens and permissions
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
 
@@ -44,6 +55,11 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   int _currentPage = 0;
   bool _isLastPage = false;
+
+  // Permission states
+  bool _microphoneGranted = false;
+  bool _cameraGranted = false;
+  bool _storageGranted = false;
 
   @override
   void initState() {
@@ -64,6 +80,7 @@ class _OnboardingPageState extends State<OnboardingPage>
     ));
 
     _fadeController.forward();
+    _checkExistingPermissions();
   }
 
   @override
@@ -73,8 +90,147 @@ class _OnboardingPageState extends State<OnboardingPage>
     super.dispose();
   }
 
+  /// Check existing permission status
+  Future<void> _checkExistingPermissions() async {
+    final microphone = await PermissionService.hasMicrophonePermission;
+    final camera = await PermissionService.hasCameraPermission;
+    final storage = await PermissionService.hasStoragePermission;
+
+    setState(() {
+      _microphoneGranted = microphone;
+      _cameraGranted = camera;
+      _storageGranted = storage;
+    });
+  }
+
+  /// Request microphone permission
+  Future<void> _requestMicrophonePermission() async {
+    print('🎤 Requesting microphone permission...');
+    final status = await PermissionService.requestMicrophonePermission();
+
+    setState(() {
+      _microphoneGranted = status.isGranted;
+    });
+
+    if (status.isGranted) {
+      _showPermissionGrantedMessage('microphone_permission'.tr());
+      await Future.delayed(const Duration(milliseconds: 1000));
+      _nextPage();
+    } else if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog('microphone');
+    } else {
+      _showPermissionDeniedMessage('microphone_permission'.tr());
+    }
+  }
+
+  /// Request camera permission
+  Future<void> _requestCameraPermission() async {
+    print('📷 Requesting camera permission...');
+    final status = await PermissionService.requestCameraPermission();
+
+    setState(() {
+      _cameraGranted = status.isGranted;
+    });
+
+    if (status.isGranted) {
+      _showPermissionGrantedMessage('camera_permission'.tr());
+      await Future.delayed(const Duration(milliseconds: 1000));
+      _nextPage();
+    } else if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog('camera');
+    } else {
+      _showPermissionDeniedMessage('camera_permission'.tr());
+    }
+  }
+
+  /// Request storage permission
+  Future<void> _requestStoragePermission() async {
+    print('💾 Requesting storage permission...');
+    final status = await PermissionService.requestStoragePermission();
+
+    setState(() {
+      _storageGranted = status.isGranted;
+    });
+
+    if (status.isGranted) {
+      _showPermissionGrantedMessage('storage_permission'.tr());
+      await Future.delayed(const Duration(milliseconds: 1000));
+      _nextPage();
+    } else if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog('storage');
+    } else {
+      _showPermissionDeniedMessage('storage_permission'.tr());
+    }
+  }
+
+  /// Show permission granted message
+  void _showPermissionGrantedMessage(String permission) {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Iconsax.tick_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text('$permission granted!'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Show permission denied message
+  void _showPermissionDeniedMessage(String permission) {
+    HapticFeedback.heavyImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Iconsax.close_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text('$permission access denied'),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  /// Show permission permanently denied dialog
+  void _showPermissionDeniedDialog(String permissionType) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('permission_denied'.tr()),
+        content: Text(
+          'To use $permissionType features, please enable permission in Settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _nextPage(); // Continue anyway
+            },
+            child: Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              PermissionService.openAppSettings();
+            },
+            child: Text('permission_settings'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<OnboardingData> _getOnboardingData(Brightness brightness) {
     return [
+      // Welcome & App Introduction Pages
       OnboardingData(
         title: 'welcome_title'.tr(),
         subtitle: 'welcome_subtitle'.tr(),
@@ -128,6 +284,55 @@ class _OnboardingPageState extends State<OnboardingPage>
         description:
             'Have fluid conversations with people who speak different languages.',
       ),
+
+      // Permission Request Pages
+      if (!_microphoneGranted)
+        OnboardingData(
+          title: 'microphone_permission'.tr(),
+          subtitle: 'microphone_needed'.tr(),
+          icon: Iconsax.microphone,
+          gradientColors: [
+            const Color(0xFF8B5CF6),
+            const Color(0xFF7C3AED),
+          ],
+          description:
+              'Enable microphone access to use voice translation features. You can always change this in Settings.',
+          isPermissionPage: true,
+          permission: Permission.microphone,
+          onPermissionRequest: _requestMicrophonePermission,
+        ),
+
+      if (!_cameraGranted)
+        OnboardingData(
+          title: 'camera_permission'.tr(),
+          subtitle: 'camera_needed'.tr(),
+          icon: Iconsax.camera,
+          gradientColors: [
+            const Color(0xFF10B981),
+            const Color(0xFF059669),
+          ],
+          description:
+              'Enable camera access to translate text from photos. You can always change this in Settings.',
+          isPermissionPage: true,
+          permission: Permission.camera,
+          onPermissionRequest: _requestCameraPermission,
+        ),
+
+      if (!_storageGranted)
+        OnboardingData(
+          title: 'storage_permission'.tr(),
+          subtitle: 'storage_needed'.tr(),
+          icon: Iconsax.folder,
+          gradientColors: [
+            const Color(0xFF6366F1),
+            const Color(0xFF4F46E5),
+          ],
+          description:
+              'Enable storage access to save your translations and favorites. You can always change this in Settings.',
+          isPermissionPage: true,
+          permission: Permission.storage,
+          onPermissionRequest: _requestStoragePermission,
+        ),
     ];
   }
 
@@ -167,6 +372,11 @@ class _OnboardingPageState extends State<OnboardingPage>
       // Mark onboarding as completed
       await UserPreferencesService.setOnboardingCompleted();
 
+      // Log permission status for debugging
+      final permissionSummary =
+          await PermissionService.getPermissionStatusSummary();
+      print('🔐 Onboarding completed with permissions: $permissionSummary');
+
       // Haptic feedback
       HapticFeedback.lightImpact();
 
@@ -175,6 +385,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         context.go(RouteNames.home);
       }
     } catch (error) {
+      print('❌ Error completing onboarding: $error');
       // Fallback navigation even if preferences fail
       if (mounted) {
         context.go(RouteNames.home);
@@ -202,11 +413,30 @@ class _OnboardingPageState extends State<OnboardingPage>
         child: SafeArea(
           child: Column(
             children: [
-              _buildTopBar(brightness),
+              // Skip button
+              if (!_isLastPage) _buildSkipButton(brightness),
+
+              // Page indicator
+              _buildPageIndicator(brightness, onboardingData.length),
+
+              // Page content
               Expanded(
-                child: _buildPageView(onboardingData, brightness),
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  itemCount: onboardingData.length,
+                  itemBuilder: (context, index) {
+                    final data = onboardingData[index];
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: _buildOnboardingPage(data, brightness),
+                    );
+                  },
+                ),
               ),
-              _buildBottomSection(brightness),
+
+              // Bottom navigation
+              _buildBottomSection(brightness, onboardingData),
             ],
           ),
         ),
@@ -214,129 +444,106 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  Widget _buildTopBar(Brightness brightness) {
-    return Padding(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Progress indicator
-          Expanded(
-            child: Row(
-              children: List.generate(
-                _getOnboardingData(brightness).length,
-                (index) => _buildProgressDot(index, brightness),
-              ),
+  Widget _buildSkipButton(Brightness brightness) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        child: TextButton(
+          onPressed: _skipOnboarding,
+          child: Text(
+            'skip'.tr(),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.mutedForeground(brightness),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Skip button
-          if (!_isLastPage)
-            TextButton(
-              onPressed: _skipOnboarding,
-              child: Text(
-                'skip'.tr(),
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: AppColors.mutedForeground(brightness),
-                ),
-              ),
+  Widget _buildPageIndicator(Brightness brightness, int totalPages) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.defaultPadding,
+        vertical: AppConstants.smallPadding,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          totalPages,
+          (index) => AnimatedContainer(
+            duration: AppConstants.defaultAnimationDuration,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: _currentPage == index ? 24 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _currentPage == index
+                  ? AppColors.primary(brightness)
+                  : AppColors.border(brightness),
+              borderRadius: BorderRadius.circular(4),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressDot(int index, Brightness brightness) {
-    final isActive = index <= _currentPage;
-
-    return Expanded(
-      child: Container(
-        height: 4,
-        margin: EdgeInsets.only(
-          right: index < _getOnboardingData(brightness).length - 1
-              ? AppConstants.smallPadding / 2
-              : 0,
-        ),
-        decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.primary(brightness)
-              : AppColors.mutedForeground(brightness).withOpacity(0.3),
-          borderRadius: BorderRadius.circular(2),
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildPageView(List<OnboardingData> data, Brightness brightness) {
-    return PageView.builder(
-      controller: _pageController,
-      onPageChanged: _onPageChanged,
-      itemCount: data.length,
-      itemBuilder: (context, index) {
-        return _buildOnboardingPage(data[index], brightness);
-      },
     );
   }
 
   Widget _buildOnboardingPage(OnboardingData data, Brightness brightness) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.largePadding),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon with gradient background
-            _buildFeatureIcon(data, brightness),
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.largePadding),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon
+          _buildFeatureIcon(data, brightness),
 
-            const SizedBox(height: AppConstants.extraLargePadding),
+          const SizedBox(height: AppConstants.extraLargePadding),
 
-            // Title
-            Text(
-              data.title,
-              style: AppTextStyles.displaySmall.copyWith(
-                color: AppColors.primary(brightness),
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
+          // Title
+          Text(
+            data.title,
+            style: AppTextStyles.headlineLarge.copyWith(
+              color: AppColors.primary(brightness),
             ),
+            textAlign: TextAlign.center,
+          ),
 
+          const SizedBox(height: AppConstants.defaultPadding),
+
+          // Subtitle
+          Text(
+            data.subtitle,
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.mutedForeground(brightness),
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          // Description (if available)
+          if (data.description != null) ...[
             const SizedBox(height: AppConstants.defaultPadding),
-
-            // Subtitle
-            Text(
-              data.subtitle,
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.mutedForeground(brightness),
+            Container(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              decoration: BoxDecoration(
+                color: AppColors.surface(brightness),
+                borderRadius:
+                    BorderRadius.circular(AppConstants.defaultBorderRadius),
+                border: Border.all(
+                  color: AppColors.border(brightness),
+                  width: 1,
+                ),
               ),
-              textAlign: TextAlign.center,
+              child: Text(
+                data.description!,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.primary(brightness),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-
-            // Description (if available)
-            if (data.description != null) ...[
-              const SizedBox(height: AppConstants.defaultPadding),
-              Container(
-                padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                decoration: BoxDecoration(
-                  color: AppColors.surface(brightness),
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.defaultBorderRadius),
-                  border: Border.all(
-                    color: AppColors.border(brightness),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  data.description!,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.primary(brightness),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }
@@ -368,7 +575,10 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  Widget _buildBottomSection(Brightness brightness) {
+  Widget _buildBottomSection(
+      Brightness brightness, List<OnboardingData> onboardingData) {
+    final currentData = onboardingData[_currentPage];
+
     return Padding(
       padding: const EdgeInsets.all(AppConstants.largePadding),
       child: Column(
@@ -376,18 +586,40 @@ class _OnboardingPageState extends State<OnboardingPage>
         children: [
           // Main action button
           CustomButton(
-            text: _isLastPage ? 'get_started'.tr() : 'next'.tr(),
-            onPressed: _nextPage,
+            text: currentData.isPermissionPage
+                ? 'grant_permission'.tr()
+                : _isLastPage
+                    ? 'get_started'.tr()
+                    : 'next'.tr(),
+            onPressed: currentData.isPermissionPage
+                ? currentData.onPermissionRequest ?? _nextPage
+                : _nextPage,
             variant: ButtonVariant.primary,
             size: ButtonSize.large,
             fullWidth: true,
-            icon: _isLastPage
-                ? Icons.rocket_launch_rounded
-                : Icons.arrow_forward_rounded,
+            icon: currentData.isPermissionPage
+                ? Iconsax.shield_tick
+                : _isLastPage
+                    ? Icons.rocket_launch_rounded
+                    : Icons.arrow_forward_rounded,
           ),
 
+          // Skip button for permission pages
+          if (currentData.isPermissionPage) ...[
+            const SizedBox(height: AppConstants.smallPadding),
+            TextButton(
+              onPressed: _nextPage,
+              child: Text(
+                'Skip for now',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.mutedForeground(brightness),
+                ),
+              ),
+            ),
+          ],
+
           // Previous button (if not first page)
-          if (_currentPage > 0) ...[
+          if (_currentPage > 0 && !currentData.isPermissionPage) ...[
             const SizedBox(height: AppConstants.defaultPadding),
             CustomButton(
               text: 'previous'.tr(),

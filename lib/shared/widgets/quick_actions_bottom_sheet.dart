@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -75,7 +74,7 @@ class QuickActionsBottomSheet extends StatelessWidget {
             subtitle: 'take_photo_to_translate',
             onTap: () {
               Navigator.of(context).pop();
-              context.go(RouteNames.camera);
+              context.push(RouteNames.camera);
             },
           ),
 

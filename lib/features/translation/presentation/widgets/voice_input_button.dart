@@ -1,6 +1,9 @@
+// lib/features/translation/presentation/widgets/voice_input_button.dart
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +13,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/services/permission_service.dart';
 
 /// Voice input button sizes
 enum VoiceInputSize {
@@ -145,33 +149,80 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     // Handle external listening state changes
     if (widget.isListening != oldWidget.isListening) {
       if (widget.isListening && !_isListening) {
-        _startListening();
+        _startListeningFlow();
       } else if (!widget.isListening && _isListening) {
         _stopListening();
       }
     }
   }
 
-  Future<void> _checkPermissionAndInitialize() async {
-    if (_isInitialized) return;
+  /// Main entry point for starting voice input - handles permissions first
+  Future<void> _startListeningFlow() async {
+    print('🎤 Voice button pressed - starting listening flow...');
 
     try {
-      // Check microphone permission
-      final permission = await Permission.microphone.status;
-      if (permission.isDenied) {
-        final result = await Permission.microphone.request();
-        if (result.isDenied) {
-          _handleError('microphone_permission_denied'.tr());
-          return;
-        }
+      // Step 1: Check microphone permission
+      final hasPermission = await PermissionService.hasMicrophonePermission;
+      print('🎤 Current microphone permission: $hasPermission');
+
+      if (!hasPermission) {
+        await _requestPermissionAndStart();
+      } else {
+        await _checkPermissionAndInitialize();
+        await _startListening();
+      }
+    } catch (e) {
+      print('🎤 Error in listening flow: $e');
+      _handleError('voice_error'.tr());
+    }
+  }
+
+  /// Request microphone permission and start if granted
+  Future<void> _requestPermissionAndStart() async {
+    print('🎤 Microphone permission not granted, requesting...');
+
+    final status = await PermissionService.requestMicrophonePermission();
+    print('🎤 Permission request result: $status');
+
+    if (status.isGranted) {
+      print('🎤 Permission granted, proceeding with initialization...');
+      _showPermissionGrantedMessage();
+      await _checkPermissionAndInitialize();
+      await _startListening();
+    } else if (status.isPermanentlyDenied) {
+      print('🎤 Permission permanently denied');
+      _showPermissionDialog();
+    } else {
+      print('🎤 Permission denied');
+      _handleError('voice_permission_denied'.tr());
+    }
+  }
+
+  /// Check permission and initialize speech recognition
+  Future<void> _checkPermissionAndInitialize() async {
+    if (_isInitialized) {
+      print('🎤 Already initialized, skipping...');
+      return;
+    }
+
+    try {
+      print('🎤 Initializing speech recognition...');
+
+      // Double-check permission
+      final hasPermission = await PermissionService.hasMicrophonePermission;
+      if (!hasPermission) {
+        _handleError('voice_permission_denied'.tr());
+        return;
       }
 
-      // Initialize speech recognition
+      // Initialize speech recognition with debug logging
       final available = await _speechToText.initialize(
         onStatus: _onSpeechStatus,
         onError: _onSpeechError,
-        debugLogging: false, // Disable in production
+        debugLogging: true, // Enable for debugging
       );
+
+      print('🎤 Speech recognition available: $available');
 
       if (mounted) {
         setState(() {
@@ -181,15 +232,105 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
       }
 
       if (!available) {
-        _handleError('speech_recognition_not_available'.tr());
+        _handleError('voice_not_available'.tr());
+      } else {
+        print('🎤 Speech recognition successfully initialized!');
       }
     } catch (e) {
-      _handleError('speech_initialization_failed'.tr());
+      print('🎤 Speech initialization error: $e');
+      _handleError('voice_error'.tr());
     }
   }
 
+  /// Start listening for speech input
+  Future<void> _startListening() async {
+    if (!_isInitialized || !_isAvailable) {
+      print(
+          '🎤 Not ready to start listening (initialized: $_isInitialized, available: $_isAvailable)');
+      await _checkPermissionAndInitialize();
+      if (!_isAvailable) return;
+    }
+
+    if (_isListening) {
+      print('🎤 Already listening, ignoring start request');
+      return;
+    }
+
+    try {
+      print('🎤 Starting speech recognition...');
+
+      final localeId = _getLocaleId();
+      print('🎤 Using locale: $localeId');
+
+      // Clear previous results
+      _recognizedText = '';
+      _confidence = 0.0;
+
+      // Start listening
+      await _speechToText.listen(
+        onResult: _onSpeechResult,
+        listenFor: widget.maxListeningDuration,
+        pauseFor: const Duration(seconds: 3),
+        partialResults: true,
+        localeId: localeId,
+        onSoundLevelChange: _onSoundLevelChange,
+        cancelOnError: true,
+        listenMode: stt.ListenMode.confirmation,
+      );
+
+      // Set timeout timer
+      _maxDurationTimer = Timer(widget.maxListeningDuration, () {
+        print('🎤 Maximum listening duration reached, stopping...');
+        _stopListening();
+        _handleError('voice_timeout'.tr());
+      });
+
+      print('🎤 Speech recognition started successfully');
+    } catch (e) {
+      print('🎤 Error starting speech recognition: $e');
+      _handleError('voice_error'.tr());
+    }
+  }
+
+  /// Stop listening for speech input
+  Future<void> _stopListening() async {
+    if (!_isListening && !_speechToText.isListening) {
+      return;
+    }
+
+    try {
+      print('🎤 Stopping speech recognition...');
+
+      // Cancel timers
+      _maxDurationTimer?.cancel();
+      _debounceTimer?.cancel();
+
+      // Stop speech recognition
+      await _speechToText.stop();
+
+      // Stop animations
+      _stopAnimations();
+
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+        });
+      }
+
+      // Notify parent
+      widget.onListeningChanged?.call(false);
+
+      print('🎤 Speech recognition stopped');
+    } catch (e) {
+      print('🎤 Error stopping speech recognition: $e');
+    }
+  }
+
+  /// Handle speech recognition status changes
   void _onSpeechStatus(String status) {
     if (!mounted) return;
+
+    print('🎤 Speech status: $status');
 
     switch (status) {
       case 'listening':
@@ -201,7 +342,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
         break;
       case 'notListening':
         if (_isListening) {
-          _stopListening();
+          _finalizeSpeechInput();
         }
         break;
       case 'done':
@@ -210,112 +351,92 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     }
   }
 
+  /// Handle speech recognition errors
   void _onSpeechError(dynamic error) {
+    print('🎤 Speech error: $error');
+
     _stopListening();
-    final errorMessage = error?.errorMsg ?? 'speech_recognition_error'.tr();
+
+    String errorMessage = 'voice_error'.tr();
+
+    if (error != null) {
+      final errorCode = error.errorMsg ?? error.toString();
+
+      if (errorCode.contains('network')) {
+        errorMessage = 'voice_network_error'.tr();
+      } else if (errorCode.contains('no-speech')) {
+        errorMessage = 'voice_no_speech'.tr();
+      } else if (errorCode.contains('audio')) {
+        errorMessage = 'voice_permission_denied'.tr();
+      }
+    }
+
     _handleError(errorMessage);
   }
 
+  /// Handle speech recognition results
   void _onSpeechResult(stt.SpeechRecognitionResult result) {
     if (!mounted) return;
+
+    print(
+        '🎤 Speech result: "${result.recognizedWords}" (confidence: ${result.confidence})');
 
     setState(() {
       _recognizedText = result.recognizedWords;
       _confidence = result.confidence;
     });
 
-    // Debounce partial results
-    if (!result.finalResult) {
+    // Debounce the final result to avoid multiple callbacks
+    if (result.finalResult) {
       _debounceTimer?.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-        if (mounted && _recognizedText.isNotEmpty) {
-          widget.onVoiceInput(_recognizedText);
-        }
+        _finalizeSpeechInput();
       });
-    } else {
-      _debounceTimer?.cancel();
-      _finalizeSpeechInput();
     }
   }
 
+  /// Handle sound level changes for visual feedback
+  void _onSoundLevelChange(double level) {
+    // Update confidence visual indicator
+    if (mounted && _isListening) {
+      setState(() {
+        _confidence = (level + 1) / 2; // Normalize to 0-1 range
+      });
+    }
+  }
+
+  /// Finalize and process speech input
   void _finalizeSpeechInput() {
+    print('🎤 Finalizing speech input: "$_recognizedText"');
+
+    _stopListening();
+
     if (_recognizedText.isNotEmpty) {
       widget.onVoiceInput(_recognizedText);
-    }
-    _stopListening();
-  }
-
-  Future<void> _startListening() async {
-    if (_isListening || !_isInitialized) return;
-
-    await _checkPermissionAndInitialize();
-    if (!_isAvailable) return;
-
-    try {
-      final localeId = _getLocaleId();
-
-      await _speechToText.listen(
-        onResult: _onSpeechResult,
-        listenFor: widget.maxListeningDuration,
-        pauseFor: const Duration(seconds: 3),
-        partialResults: true,
-        cancelOnError: true,
-        listenMode: stt.ListenMode.confirmation,
-        localeId: localeId,
-      );
-
-      // Set maximum duration timer
-      _maxDurationTimer?.cancel();
-      _maxDurationTimer = Timer(widget.maxListeningDuration, () {
-        if (_isListening) {
-          _stopListening();
-        }
-      });
-    } catch (e) {
-      _handleError('failed_to_start_listening'.tr());
+      _showSuccessMessage(_recognizedText);
+    } else {
+      _handleError('voice_no_speech'.tr());
     }
   }
 
-  void _stopListening() {
-    if (!_isListening) return;
-
-    _maxDurationTimer?.cancel();
-    _debounceTimer?.cancel();
-
-    if (_speechToText.isListening) {
-      _speechToText.stop();
-    }
-
-    _stopAnimations();
-
-    if (mounted) {
-      setState(() {
-        _isListening = false;
-      });
-    }
-
-    widget.onListeningChanged?.call(false);
-  }
-
+  /// Start visual animations
   void _startAnimations() {
-    if (!mounted) return;
     _pulseController.repeat(reverse: true);
-    _waveController.repeat(reverse: true);
+    _waveController.forward();
   }
 
+  /// Stop visual animations
   void _stopAnimations() {
-    if (!mounted) return;
     _pulseController.stop();
-    _waveController.stop();
-    _pulseController.reset();
-    _waveController.reset();
+    _waveController.reverse();
   }
 
+  /// Get locale ID for speech recognition
   String _getLocaleId() {
     final language = widget.detectedLanguage ?? widget.sourceLanguage;
 
     // Map language codes to locale IDs
-    final localeMap = {
+    const localeMap = {
       'en': 'en_US',
       'es': 'es_ES',
       'fr': 'fr_FR',
@@ -328,24 +449,124 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
       'zh': 'zh_CN',
       'ar': 'ar_SA',
       'hi': 'hi_IN',
+      'nl': 'nl_NL',
+      'pl': 'pl_PL',
+      'sv': 'sv_SE',
+      'da': 'da_DK',
+      'no': 'no_NO',
+      'fi': 'fi_FI',
+      'cs': 'cs_CZ',
+      'hu': 'hu_HU',
+      'tr': 'tr_TR',
+      'th': 'th_TH',
+      'vi': 'vi_VN',
+      'id': 'id_ID',
+      'ms': 'ms_MY',
     };
 
     return localeMap[language] ?? 'en_US';
   }
 
-  void _handleError(String error) {
-    final sonner = ShadSonner.of(context);
-    widget.onError?.call(error);
-    if (mounted) {
-      sonner.show(
-        ShadToast.destructive(
-          description: Text('alternative_copied'.tr()),
+  /// Show permission granted success message
+  void _showPermissionGrantedMessage() {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Iconsax.tick_circle),
+            const SizedBox(width: 8),
+            Text('Microphone permission granted!'),
+          ],
         ),
-      );
-      context.showError(error);
-    }
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
+  /// Show success message when speech is recognized
+  void _showSuccessMessage(String text) {
+    HapticFeedback.lightImpact();
+    print('🎤 SUCCESS: Voice input recognized: "$text"');
+  }
+
+  /// Show permission dialog when permanently denied
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('permission_required'.tr()),
+        content: Text('microphone_needed'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              PermissionService.openAppSettings();
+            },
+            child: Text('permission_settings'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handle errors with user-friendly messages
+  void _handleError(String error) {
+    print('🎤 ERROR: $error');
+
+    HapticFeedback.heavyImpact();
+
+    // Show user-friendly error messages
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Iconsax.close_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(error)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+        action: error.contains('permission')
+            ? SnackBarAction(
+                label: 'Settings',
+                textColor: Colors.white,
+                onPressed: () => PermissionService.openAppSettings(),
+              )
+            : null,
+      ),
+    );
+
+    // Also use ShadCN UI toast if available
+    try {
+      final sonner = ShadSonner.of(context);
+      sonner.show(
+        ShadToast.destructive(
+          description: Text(error),
+          action: error.contains('permission')
+              ? ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  child: Text('Settings'),
+                  onPressed: () => PermissionService.openAppSettings(),
+                )
+              : null,
+        ),
+      );
+    } catch (e) {
+      // Fallback if ShadCN UI is not available
+      print('🎤 Could not show ShadCN toast: $e');
+    }
+
+    widget.onError?.call(error);
+  }
+
+  /// Get button size based on size enum
   double _getButtonSize() {
     switch (widget.size) {
       case VoiceInputSize.small:
@@ -362,84 +583,127 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     final brightness = context.brightness;
     final buttonSize = _getButtonSize();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: _isListening ? _stopListening : _startListening,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_pulseController, _waveController]),
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _isListening
-                    ? _pulseAnimation.value * _scaleAnimation.value
-                    : 1.0,
-                child: Container(
-                  width: buttonSize,
-                  height: buttonSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _isListening
-                        ? AppColors.lightDestructive
-                        : (widget.color ?? AppColors.primary(brightness)),
-                    boxShadow: _isListening
-                        ? [
-                            BoxShadow(
-                              color: AppColors.surface(brightness)
-                                  .withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ]
-                        : [
-                            BoxShadow(
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+    return Tooltip(
+      message: widget.tooltip ??
+          (_isListening ? 'stop_listening'.tr() : 'tap_to_speak'.tr()),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Main voice button
+          GestureDetector(
+            onTap: _isListening ? _stopListening : _startListeningFlow,
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_pulseController, _waveController]),
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _isListening
+                      ? _pulseAnimation.value * _scaleAnimation.value
+                      : 1.0,
+                  child: Container(
+                    width: buttonSize,
+                    height: buttonSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isListening
+                          ? Colors.red
+                          : (widget.color ?? AppColors.surface(brightness)),
+                      boxShadow: _isListening
+                          ? [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 4,
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: (widget.color ??
+                                        AppColors.primary(brightness))
+                                    .withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                    ),
+                    child: Icon(
+                      _isListening
+                          ? Iconsax.microphone_slash
+                          : Iconsax.microphone,
+                      size: buttonSize * 0.4,
+                      color: AppColors.primary(brightness),
+                    ),
                   ),
-                  child: Icon(
-                    _isListening
-                        ? Iconsax.microphone_slash
-                        : Iconsax.microphone,
-                    size: buttonSize * 0.4,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        if (widget.showLabel) ...[
-          const SizedBox(height: 8),
-          Text(
-            _isListening ? 'voice_listening'.tr() : 'voice_tap_to_speak'.tr(),
-            textAlign: TextAlign.center,
-          ),
-        ],
-
-        // Show confidence indicator when listening
-        if (_isListening && _confidence > 0) ...[
-          const SizedBox(height: 4),
-          Container(
-            width: buttonSize * 0.8,
-            height: 2,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(1),
-              color: AppColors.surface(brightness),
+                );
+              },
             ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: _confidence,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(1),
+          ),
+
+          // Label (if enabled)
+          if (widget.showLabel) ...[
+            const SizedBox(height: 8),
+            Text(
+              _isListening ? 'listening'.tr() : 'tap_to_speak'.tr(),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.primary(brightness),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          // Confidence indicator (when listening)
+          if (_isListening && _confidence > 0) ...[
+            const SizedBox(height: 6),
+            Container(
+              width: buttonSize * 0.8,
+              height: 3,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(1.5),
+                color: Colors.grey[300],
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: _confidence.clamp(0.0, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(1.5),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.green,
+                        Colors.greenAccent,
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
+
+          // Processing indicator (when recognizing speech)
+          if (_isListening && _recognizedText.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Text(
+                _recognizedText,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[700],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

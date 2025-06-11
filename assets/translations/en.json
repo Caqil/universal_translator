@@ -50,18 +50,41 @@
   },
 
   "onboarding": {
-    "welcome": "Welcome to Translate App",
-    "welcome_description": "Translate text, voice, and images in over 100 languages",
+    "welcome_title": "Welcome to Translation App",
+    "welcome_subtitle": "Your AI-powered translation companion",
     "feature_1_title": "Text Translation",
-    "feature_1_description": "Instantly translate text between multiple languages",
-    "feature_2_title": "Voice Translation", 
-    "feature_2_description": "Speak and hear translations in real-time",
-    "feature_3_title": "Camera Translation",
-    "feature_3_description": "Point your camera at text and see instant translations",
+    "feature_1_subtitle": "Translate any text instantly",
+    "feature_2_title": "Camera Translation", 
+    "feature_2_subtitle": "Translate text from photos",
+    "feature_3_title": "Voice Translation",
+    "feature_3_subtitle": "Speak and get instant translations",
     "feature_4_title": "Conversation Mode",
-    "feature_4_description": "Have conversations across language barriers",
+    "feature_4_subtitle": "Real-time conversation translation",
     "get_started": "Get Started",
-    "skip_intro": "Skip Introduction"
+    "next": "Next",
+    "previous": "Previous",
+    "skip": "Skip"
+  },
+
+  "permissions": {
+    "microphone_permission": "Microphone Permission",
+    "camera_permission": "Camera Permission", 
+    "storage_permission": "Storage Permission",
+    "permission_required": "Permission Required",
+    "permission_denied": "Permission Denied",
+    "grant_permission": "Grant Permission",
+    "permission_settings": "Open Settings",
+    "microphone_needed": "Microphone access is needed for voice translation",
+    "camera_needed": "Camera access is needed for photo translation", 
+    "storage_needed": "Storage access is needed to save files",
+    "permission_rationale": "This permission is required for the app to function properly",
+    "permission_granted_success": "Permission granted successfully!",
+    "permission_denied_error": "Permission denied. Some features may not work.",
+    "permissions_setup_complete": "Permissions setup complete",
+    "skip_permission": "Skip for now",
+    "permission_explanation_microphone": "We need microphone access to provide voice translation features. This allows you to speak in any language and get instant translations.",
+    "permission_explanation_camera": "We need camera access to translate text from photos. Point your camera at signs, menus, or documents for instant translation.",
+    "permission_explanation_storage": "We need storage access to save your favorite translations and download offline language packs for better performance."
   },
 
   "translation": {
@@ -340,20 +363,6 @@
     "auto_detect_enabled": "Auto-detect is enabled",
     "conversation_empty": "No conversation yet",
     "start_talking": "Start talking to begin the conversation"
-  },
-
-  "permissions": {
-    "microphone_permission": "Microphone Permission",
-    "camera_permission": "Camera Permission",
-    "storage_permission": "Storage Permission",
-    "permission_required": "Permission Required",
-    "permission_denied": "Permission Denied",
-    "grant_permission": "Grant Permission",
-    "permission_settings": "Open Settings", 
-    "microphone_needed": "Microphone access is needed for voice translation",
-    "camera_needed": "Camera access is needed for photo translation",
-    "storage_needed": "Storage access is needed to save files",
-    "permission_rationale": "This permission is required for the app to function properly"
   },
 
   "offline": {

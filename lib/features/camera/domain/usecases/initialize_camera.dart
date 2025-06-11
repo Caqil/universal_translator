@@ -1,3 +1,4 @@
+// lib/features/camera/domain/usecases/initialize_camera.dart
 import 'package:dartz/dartz.dart';
 import 'package:camera/camera.dart';
 import 'package:injectable/injectable.dart';
@@ -5,14 +6,14 @@ import '../../../../core/error/failures.dart';
 import '../repositories/camera_repository.dart';
 
 @injectable
-class CaptureImage {
+class InitializeCamera {
   final CameraRepository repository;
 
-  CaptureImage(this.repository);
+  InitializeCamera(this.repository);
 
-  Future<Either<CameraFailure, String>> call(
-    CameraController controller,
+  Future<Either<CameraFailure, CameraController>> call(
+    CameraDescription camera,
   ) async {
-    return await repository.captureImage(controller);
+    return await repository.initializeCamera(camera);
   }
 }

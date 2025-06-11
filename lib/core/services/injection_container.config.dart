@@ -17,6 +17,18 @@ import 'package:internet_connection_checker/internet_connection_checker.dart'
     as _i973;
 import 'package:speech_to_text/speech_to_text.dart' as _i941;
 
+import '../../features/camera/domain/repositories/camera_repository.dart'
+    as _i491;
+import '../../features/camera/domain/usecases/capture_image.dart' as _i843;
+import '../../features/camera/domain/usecases/check_camera_permission.dart'
+    as _i334;
+import '../../features/camera/domain/usecases/get_available_cameras.dart'
+    as _i635;
+import '../../features/camera/domain/usecases/initialize_camera.dart' as _i156;
+import '../../features/camera/domain/usecases/process_ocr.dart' as _i485;
+import '../../features/camera/domain/usecases/request_camera_permission.dart'
+    as _i1036;
+import '../../features/camera/domain/usecases/save_image.dart' as _i8;
 import '../../features/settings/data/datasources/settings_local_datasource.dart'
     as _i723;
 import '../../features/settings/data/repositories/settings_repository_impl.dart'
@@ -70,6 +82,19 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i895.Connectivity>(() => networkModule.connectivity);
   gh.lazySingleton<_i973.InternetConnectionChecker>(
       () => networkModule.internetConnectionChecker);
+  gh.factory<_i334.CheckCameraPermission>(
+      () => _i334.CheckCameraPermission(gh<_i491.CameraRepository>()));
+  gh.factory<_i1036.RequestCameraPermission>(
+      () => _i1036.RequestCameraPermission(gh<_i491.CameraRepository>()));
+  gh.factory<_i485.ProcessOcr>(
+      () => _i485.ProcessOcr(gh<_i491.CameraRepository>()));
+  gh.factory<_i8.SaveImage>(() => _i8.SaveImage(gh<_i491.CameraRepository>()));
+  gh.factory<_i843.CaptureImage>(
+      () => _i843.CaptureImage(gh<_i491.CameraRepository>()));
+  gh.factory<_i156.InitializeCamera>(
+      () => _i156.InitializeCamera(gh<_i491.CameraRepository>()));
+  gh.factory<_i635.GetAvailableCameras>(
+      () => _i635.GetAvailableCameras(gh<_i491.CameraRepository>()));
   gh.lazySingleton<_i657.TranslationLocalDataSource>(
       () => _i657.TranslationLocalDataSourceImpl(
             gh<_i979.Box<dynamic>>(instanceName: 'translationsBox'),

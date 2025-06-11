@@ -5,9 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text_styles.dart';
-import '../../core/utils/extensions.dart';
 
 /// Custom bottom navigation bar for the translation app
 class CustomBottomNavBar extends StatelessWidget {
@@ -50,7 +48,6 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final brightness = context.brightness;
     final effectiveBackgroundColor =
         backgroundColor ?? theme.colorScheme.background;
     final effectiveSelectedColor =
@@ -60,78 +57,12 @@ class CustomBottomNavBar extends StatelessWidget {
 
     final items = _buildNavigationItems(context);
 
-    if (useMaterial3Style) {
-      return _buildMaterial3NavigationBar(
-        context,
-        items,
-        effectiveBackgroundColor,
-        effectiveSelectedColor,
-        effectiveUnselectedColor,
-      );
-    } else {
-      return _buildLegacyBottomNavigationBar(
-        context,
-        items,
-        effectiveBackgroundColor,
-        effectiveSelectedColor,
-        effectiveUnselectedColor,
-      );
-    }
-  }
-
-  Widget _buildMaterial3NavigationBar(
-    BuildContext context,
-    List<_NavigationItem> items,
-    Color backgroundColor,
-    Color selectedColor,
-    Color unselectedColor,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.border(context.brightness),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black10,
-            blurRadius: AppConstants.defaultElevation,
-            offset: const Offset(0, -1),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.smallPadding,
-            vertical: AppConstants.smallPadding,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final isSelected = currentIndex == index && currentIndex != -1;
-              final isCenterItem = index == 2; // Translate is the center item
-
-              return Expanded(
-                child: _NavigationBarItem(
-                  item: item,
-                  isSelected: isSelected,
-                  isCenterItem: isCenterItem,
-                  onTap: () => onTap(index),
-                  selectedColor: selectedColor,
-                  unselectedColor: unselectedColor,
-                  showLabel: showLabels,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+    return _buildLegacyBottomNavigationBar(
+      context,
+      items,
+      effectiveBackgroundColor,
+      effectiveSelectedColor,
+      effectiveUnselectedColor,
     );
   }
 
@@ -188,9 +119,9 @@ class CustomBottomNavBar extends StatelessWidget {
         label: 'navigation.history'.tr(),
       ),
       _NavigationItem(
-        icon: Iconsax.profile_circle,
-        activeIcon: Iconsax.profile_circle5,
-        label: 'navigation.profile'.tr(),
+        icon: Iconsax.setting,
+        activeIcon: Iconsax.setting1,
+        label: 'navigation.settings'.tr(),
       ),
     ];
   }

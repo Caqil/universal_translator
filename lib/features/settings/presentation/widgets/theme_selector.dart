@@ -7,21 +7,14 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../../data/models/app_settings_model.dart';
 
-/// Theme selector widget for switching between light/dark/system themes
 class ThemeSelector extends StatefulWidget {
-  /// Currently selected theme
   final AppTheme selectedTheme;
 
-  /// Callback when theme is selected
   final ValueChanged<AppTheme> onThemeSelected;
 
-  /// Whether to show as compact design
   final bool isCompact;
-
-  /// Whether to show theme preview
   final bool showPreview;
 
   const ThemeSelector({

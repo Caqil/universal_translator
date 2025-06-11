@@ -1,4 +1,3 @@
-// lib/features/translation/presentation/pages/translation_page.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:translate_app/core/utils/extensions.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -191,10 +191,9 @@ class _TranslationViewState extends State<TranslationView>
               previous.currentTranslation != current.currentTranslation;
         },
         builder: (context, state) {
+          // Show skeleton loading while languages are loading
           if (state.status == TranslationStatus.loadingLanguages) {
-            return CustomLoadingWidget.page(
-              message: 'app.loading'.tr(),
-            );
+            return _buildSkeletonLoading(context, brightness);
           }
 
           return SafeArea(
@@ -230,6 +229,379 @@ class _TranslationViewState extends State<TranslationView>
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// Build skeleton loading UI that mimics the actual interface
+  Widget _buildSkeletonLoading(BuildContext context, Brightness brightness) {
+    return Skeletonizer(
+      enabled: true,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Skeleton Language Selection Header
+            _buildSkeletonLanguageHeader(brightness),
+
+            // Skeleton Content Area
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                child: Column(
+                  children: [
+                    // Skeleton Source Text Input
+                    _buildSkeletonTextInput(brightness),
+
+                    const SizedBox(height: AppConstants.defaultPadding),
+
+                    // Skeleton Translation Output (optional)
+                    _buildSkeletonTranslationOutput(brightness),
+
+                    const SizedBox(height: AppConstants.defaultPadding * 2),
+
+                    // Skeleton Translate Button
+                    _buildSkeletonButton(brightness),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build skeleton language selection header
+  Widget _buildSkeletonLanguageHeader(Brightness brightness) {
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        color: AppColors.surface(brightness),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.surface(brightness),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Skeleton Source Language Selector
+          Expanded(
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.background(brightness),
+                borderRadius:
+                    BorderRadius.circular(AppConstants.defaultBorderRadius),
+                border: Border.all(
+                  color: AppColors.border(brightness),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Expanded(
+                      child: Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: AppColors.mutedForeground(brightness),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Skeleton Swap Button
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.defaultPadding / 2,
+            ),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Center(
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.mutedForeground(brightness),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Skeleton Target Language Selector
+          Expanded(
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.background(brightness),
+                borderRadius:
+                    BorderRadius.circular(AppConstants.defaultBorderRadius),
+                border: Border.all(
+                  color: AppColors.border(brightness),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Expanded(
+                      child: Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: AppColors.mutedForeground(brightness),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build skeleton text input area
+  Widget _buildSkeletonTextInput(Brightness brightness) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        height: 160,
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        decoration: BoxDecoration(
+          color: AppColors.surface(brightness),
+          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Skeleton text lines
+            Container(
+              height: 16,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: AppConstants.smallPadding),
+            Container(
+              height: 16,
+              width: MediaQuery.of(context).size.width * 0.7,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: AppConstants.smallPadding),
+            Container(
+              height: 16,
+              width: MediaQuery.of(context).size.width * 0.5,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const Spacer(),
+            // Skeleton action buttons row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness)
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness)
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 16,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.mutedForeground(brightness),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build skeleton translation output area
+  Widget _buildSkeletonTranslationOutput(Brightness brightness) {
+    return ShadCard(
+      child: Container(
+        height: 140,
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        decoration: BoxDecoration(
+          color: AppColors.surface(brightness),
+          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Skeleton translation lines
+            Container(
+              height: 16,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: AppConstants.smallPadding),
+            Container(
+              height: 16,
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                color: AppColors.mutedForeground(brightness),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const Spacer(),
+            // Skeleton action buttons row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness)
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness)
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    const SizedBox(width: AppConstants.smallPadding),
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.mutedForeground(brightness)
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 14,
+                  width: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.mutedForeground(brightness),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build skeleton translate button
+  Widget _buildSkeletonButton(Brightness brightness) {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: AppColors.mutedForeground(brightness).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+      ),
+      child: Center(
+        child: Container(
+          height: 16,
+          width: 100,
+          decoration: BoxDecoration(
+            color: AppColors.mutedForeground(brightness),
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
       ),
     );
   }
@@ -304,16 +676,13 @@ class _TranslationViewState extends State<TranslationView>
     TranslationState state,
     Brightness brightness,
   ) {
-    return Card(
-      elevation: 2,
-      child: TranslationInput(
-        controller: _inputController,
-        onVoiceInput: _onVoiceInput,
-        sourceLanguage: state.sourceLanguage,
-        detectedLanguage: state.detectedLanguage,
-        isListening: false, // Manage voice input state separately
-        onTextCleared: _onClearText,
-      ),
+    return TranslationInput(
+      controller: _inputController,
+      onVoiceInput: _onVoiceInput,
+      sourceLanguage: state.sourceLanguage,
+      detectedLanguage: state.detectedLanguage,
+      isListening: false, // Manage voice input state separately
+      onTextCleared: _onClearText,
     );
   }
 
@@ -322,13 +691,10 @@ class _TranslationViewState extends State<TranslationView>
     TranslationState state,
     Brightness brightness,
   ) {
-    return Card(
-      elevation: 2,
-      child: TranslationOutput(
-        translation: state.currentTranslation!,
-        targetLanguage: state.targetLanguage,
-        supportedLanguages: state.supportedLanguages,
-      ),
+    return TranslationOutput(
+      translation: state.currentTranslation!,
+      targetLanguage: state.targetLanguage,
+      supportedLanguages: state.supportedLanguages,
     );
   }
 

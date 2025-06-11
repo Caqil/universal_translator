@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
@@ -46,7 +47,7 @@ final GoRouter appRouter = GoRouter(
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
-        return MainWrapperPage(child: child);
+        return MainWrapperPage();
       },
       routes: [
         // Translation tab (home)
@@ -347,17 +348,6 @@ class TranslationFullscreenPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Translation')),
       body: Center(child: Text('Translation Fullscreen: $translationId')),
-    );
-  }
-}
-
-class CameraPage extends StatelessWidget {
-  const CameraPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Camera')),
-      body: const Center(child: Text('Camera - To be implemented')),
     );
   }
 }

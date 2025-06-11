@@ -5,14 +5,12 @@ import '../../../../core/error/failures.dart';
 import '../repositories/camera_repository.dart';
 
 @injectable
-class CaptureImage {
+class GetAvailableCameras {
   final CameraRepository repository;
 
-  CaptureImage(this.repository);
+  GetAvailableCameras(this.repository);
 
-  Future<Either<CameraFailure, String>> call(
-    CameraController controller,
-  ) async {
-    return await repository.captureImage(controller);
+  Future<Either<CameraFailure, List<CameraDescription>>> call() async {
+    return await repository.getAvailableCameras();
   }
 }
