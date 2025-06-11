@@ -32,6 +32,12 @@ abstract class HistoryLocalDataSource {
 
   /// Import history from JSON
   Future<void> importHistory(Map<String, dynamic> data);
+  Future<List<HistoryItemModel>> getHistoryByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    int? limit,
+    int? offset,
+  });
 
   /// Get history grouped by date
   Future<Map<String, List<HistoryItemModel>>> getGroupedHistory();
@@ -227,6 +233,44 @@ class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
       return groupedItems;
     } catch (e) {
       throw CacheException.readError('Failed to get grouped history: $e');
+    }
+  }
+
+  @override
+  Future<List<HistoryItemModel>> getHistoryByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      // Get all items from the box
+      final allItems = _historyBox.values.toList();
+
+      // Filter by date range
+      final filteredItems = allItems.where((item) {
+        final itemDate = item.timestamp;
+        return itemDate
+                .isAfter(startDate.subtract(const Duration(seconds: 1))) &&
+            itemDate.isBefore(endDate.add(const Duration(seconds: 1)));
+      }).toList();
+
+      // Sort by timestamp (newest first)
+      filteredItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+      // Apply pagination
+      final startIndex = offset ?? 0;
+      final endIndex = limit != null
+          ? (startIndex + limit).clamp(0, filteredItems.length)
+          : filteredItems.length;
+
+      if (startIndex >= filteredItems.length) {
+        return [];
+      }
+
+      return filteredItems.sublist(startIndex, endIndex);
+    } catch (e) {
+      throw CacheException.readError('Failed to get history by date range: $e');
     }
   }
 

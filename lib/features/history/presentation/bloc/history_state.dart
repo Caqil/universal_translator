@@ -25,16 +25,22 @@ class HistoryLoaded extends HistoryState {
   final bool isSearching;
   final String? searchQuery;
   final bool hasMore;
-
+  final bool isFiltered; // Add this
+  final String? filterDescription; // Add this
   const HistoryLoaded({
     required this.items,
     this.isSearching = false,
     this.searchQuery,
     this.hasMore = false,
+    this.isFiltered = false,
+    this.filterDescription,
   });
 
   @override
-  List<Object?> get props => [items, isSearching, searchQuery, hasMore];
+  List<Object?> get props => [
+        items, isSearching, searchQuery, hasMore, isFiltered, // Add this
+        filterDescription,
+      ];
 
   HistoryLoaded copyWith({
     List<HistoryItem>? items,

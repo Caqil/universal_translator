@@ -232,8 +232,8 @@ class _OnboardingPageState extends State<OnboardingPage>
     return [
       // Welcome & App Introduction Pages
       OnboardingData(
-        title: 'welcome_title'.tr(),
-        subtitle: 'welcome_subtitle'.tr(),
+        title: 'onboarding.welcome_title'.tr(),
+        subtitle: 'onboarding.welcome_subtitle'.tr(),
         icon: Icons.waving_hand_rounded,
         gradientColors: [
           AppColors.primary(brightness),
@@ -241,8 +241,8 @@ class _OnboardingPageState extends State<OnboardingPage>
         ],
       ),
       OnboardingData(
-        title: 'feature_1_title'.tr(),
-        subtitle: 'feature_1_subtitle'.tr(),
+        title: 'onboarding.feature_1_title'.tr(),
+        subtitle: 'onboarding.feature_1_subtitle'.tr(),
         icon: Icons.translate_rounded,
         gradientColors: [
           const Color(0xFF6366F1),
@@ -252,8 +252,8 @@ class _OnboardingPageState extends State<OnboardingPage>
             'Type or paste text in any language and get instant, accurate translations.',
       ),
       OnboardingData(
-        title: 'feature_2_title'.tr(),
-        subtitle: 'feature_2_subtitle'.tr(),
+        title: 'onboarding.feature_2_title'.tr(),
+        subtitle: 'onboarding.feature_2_subtitle'.tr(),
         icon: Icons.camera_alt_rounded,
         gradientColors: [
           const Color(0xFF10B981),
@@ -263,8 +263,8 @@ class _OnboardingPageState extends State<OnboardingPage>
             'Point your camera at signs, menus, documents, or any text to translate instantly.',
       ),
       OnboardingData(
-        title: 'feature_3_title'.tr(),
-        subtitle: 'feature_3_subtitle'.tr(),
+        title: 'onboarding.feature_3_title'.tr(),
+        subtitle: 'onboarding.feature_3_subtitle'.tr(),
         icon: Icons.keyboard_voice_rounded,
         gradientColors: [
           const Color(0xFFF59E0B),
@@ -274,8 +274,8 @@ class _OnboardingPageState extends State<OnboardingPage>
             'Speak naturally in any language and hear the translation spoken back to you.',
       ),
       OnboardingData(
-        title: 'feature_4_title'.tr(),
-        subtitle: 'feature_4_subtitle'.tr(),
+        title: 'onboarding.feature_4_title'.tr(),
+        subtitle: 'onboarding.feature_4_subtitle'.tr(),
         icon: Icons.chat_bubble_rounded,
         gradientColors: [
           const Color(0xFFEF4444),
@@ -288,8 +288,8 @@ class _OnboardingPageState extends State<OnboardingPage>
       // Permission Request Pages
       if (!_microphoneGranted)
         OnboardingData(
-          title: 'microphone_permission'.tr(),
-          subtitle: 'microphone_needed'.tr(),
+          title: 'onboarding.microphone_permission'.tr(),
+          subtitle: 'onboarding.microphone_needed'.tr(),
           icon: Iconsax.microphone,
           gradientColors: [
             const Color(0xFF8B5CF6),
@@ -304,8 +304,8 @@ class _OnboardingPageState extends State<OnboardingPage>
 
       if (!_cameraGranted)
         OnboardingData(
-          title: 'camera_permission'.tr(),
-          subtitle: 'camera_needed'.tr(),
+          title: 'onboarding.camera_permission'.tr(),
+          subtitle: 'onboarding.camera_needed'.tr(),
           icon: Iconsax.camera,
           gradientColors: [
             const Color(0xFF10B981),
@@ -320,8 +320,8 @@ class _OnboardingPageState extends State<OnboardingPage>
 
       if (!_storageGranted)
         OnboardingData(
-          title: 'storage_permission'.tr(),
-          subtitle: 'storage_needed'.tr(),
+          title: 'onboarding.storage_permission'.tr(),
+          subtitle: 'onboarding.storage_needed'.tr(),
           icon: Iconsax.folder,
           gradientColors: [
             const Color(0xFF6366F1),

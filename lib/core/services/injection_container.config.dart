@@ -185,6 +185,8 @@ _i174.GetIt $initGetIt(
         gh<_i301.TranslateText>(),
         gh<_i376.DetectLanguage>(),
         gh<_i858.GetSupportedLanguages>(),
+        gh<_i952.SaveToHistory>(),
+        gh<_i558.GetSettings>(),
       ));
   return getIt;
 }

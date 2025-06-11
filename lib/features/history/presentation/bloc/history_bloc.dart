@@ -38,6 +38,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<ImportHistoryEvent>(_onImportHistory);
     on<LoadGroupedHistoryEvent>(_onLoadGroupedHistory);
     on<RefreshHistoryEvent>(_onRefreshHistory);
+    on<LoadHistoryByDateEvent>(_onLoadHistoryByDate);
   }
 
   Future<void> _onLoadHistory(
@@ -295,6 +296,58 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         }
       },
     );
+  }
+
+  Future<void> _onLoadHistoryByDate(
+    LoadHistoryByDateEvent event,
+    Emitter<HistoryState> emit,
+  ) async {
+    emit(const HistoryLoading());
+
+    // Calculate the date range
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: event.days - 1));
+    final endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final result = await _repository.getHistoryByDateRange(
+      startDate: startDate,
+      endDate: endDate,
+      limit: event.limit,
+      offset: event.offset,
+    );
+
+    result.fold(
+      (failure) => emit(HistoryError(
+        message: failure.message,
+        code: failure.code,
+      )),
+      (items) {
+        if (items.isEmpty) {
+          emit(const HistoryEmpty());
+        } else {
+          emit(HistoryLoaded(
+            items: items,
+            hasMore: event.limit != null && items.length == event.limit,
+            isFiltered: true,
+            filterDescription: _getFilterDescription(event.days),
+          ));
+        }
+      },
+    );
+  }
+
+  String _getFilterDescription(int days) {
+    switch (days) {
+      case 1:
+        return 'Today';
+      case 7:
+        return 'This week';
+      case 30:
+        return 'This month';
+      default:
+        return 'Last $days days';
+    }
   }
 
   Future<void> _onRefreshHistory(

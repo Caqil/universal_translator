@@ -117,9 +117,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
   Widget _buildCompactSelector(Brightness brightness) {
     return Container(
       decoration: BoxDecoration(
-        color: brightness == Brightness.light
-            ? AppColors.lightSecondary
-            : AppColors.darkSecondary,
+        color: AppColors.primary(brightness),
         borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
         border: Border.all(
           color: AppColors.border(brightness),
@@ -251,17 +249,14 @@ class _ThemeSelectorState extends State<ThemeSelector>
       padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
       child: InkWell(
         onTap: () => _selectTheme(theme),
-        borderRadius: BorderRadius.circular(AppConstants.smallBorderRadius),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         child: Container(
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (brightness == Brightness.light
-                        ? AppColors.lightAccent
-                        : AppColors.darkAccent)
-                    .withOpacity(0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppConstants.smallBorderRadius),
+            color:
+                isSelected ? AppColors.primary(brightness) : Colors.transparent,
+            borderRadius:
+                BorderRadius.circular(AppConstants.defaultBorderRadius),
             border: isSelected
                 ? Border.all(
                     color: brightness == Brightness.light
@@ -301,14 +296,6 @@ class _ThemeSelectorState extends State<ThemeSelector>
                   ],
                 ),
               ),
-              if (isSelected)
-                Icon(
-                  Iconsax.tick_circle5,
-                  size: AppConstants.iconSizeRegular,
-                  color: brightness == Brightness.light
-                      ? AppColors.lightAccent
-                      : AppColors.darkAccent,
-                ),
             ],
           ),
         ),

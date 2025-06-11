@@ -1,8 +1,12 @@
+
 import 'package:bloc/bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:uuid/uuid.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/app_utils.dart';
+import '../../../history/domain/entities/history_item.dart';
+import '../../../history/domain/usecases/save_to_history.dart';
+import '../../../settings/domain/usecases/get_settings.dart';
 import '../../domain/usecases/detect_language.dart';
 import '../../domain/usecases/get_supported_languages.dart';
 import '../../domain/usecases/translate_text.dart';
@@ -14,11 +18,16 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
   final TranslateText _translateText;
   final DetectLanguage _detectLanguage;
   final GetSupportedLanguages _getSupportedLanguages;
+  final SaveToHistory _saveToHistory;
+  final GetSettings _getSettings;
+  final Uuid _uuid = const Uuid();
 
   TranslationBloc(
     this._translateText,
     this._detectLanguage,
     this._getSupportedLanguages,
+    this._saveToHistory,
+    this._getSettings,
   ) : super(const TranslationInitial()) {
     on<TranslateTextEvent>(_onTranslateText);
     on<DetectLanguageEvent>(_onDetectLanguage);
@@ -62,20 +71,87 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
       targetLanguage: event.targetLanguage,
     ));
 
-    result.fold(
-      (failure) => emit(currentState.copyWith(
-        status: TranslationStatus.failure,
-        errorMessage: failure.message,
-      )),
-      (translation) => emit(currentState.copyWith(
-        status: TranslationStatus.success,
-        currentTranslation: translation,
-        errorMessage: null,
-        sourceText: event.text,
-        sourceLanguage: event.sourceLanguage,
-        targetLanguage: event.targetLanguage,
-      )),
+    await result.fold(
+      (failure) async {
+        emit(currentState.copyWith(
+          status: TranslationStatus.failure,
+          errorMessage: failure.message,
+        ));
+      },
+      (translation) async {
+        // Emit success state first
+        emit(currentState.copyWith(
+          status: TranslationStatus.success,
+          currentTranslation: translation,
+          errorMessage: null,
+          sourceText: event.text,
+          sourceLanguage: event.sourceLanguage,
+          targetLanguage: event.targetLanguage,
+        ));
+
+        // **AUTO-SAVE TO HISTORY**
+        await _saveTranslationToHistoryIfEnabled(
+          translation: translation,
+          sourceText: event.text,
+          sourceLanguage: event.sourceLanguage,
+          targetLanguage: event.targetLanguage,
+        );
+      },
     );
+  }
+
+  /// Save translation to history if auto-save is enabled
+  Future<void> _saveTranslationToHistoryIfEnabled({
+    required dynamic translation, // Your Translation entity
+    required String sourceText,
+    required String sourceLanguage,
+    required String targetLanguage,
+  }) async {
+    try {
+      // Get current settings to check if auto-save is enabled
+      final settingsResult = await _getSettings();
+
+      await settingsResult.fold(
+        (failure) async {
+          // If we can't get settings, assume auto-save is disabled
+          print(
+              '⚠️ Could not get settings for auto-save check: ${failure.message}');
+        },
+        (settings) async {
+          // Check if auto-save translations is enabled
+          if (settings.autoSaveTranslations) {
+            // Create history item
+            final historyItem = HistoryItem(
+              id: _uuid.v4(),
+              sourceText: sourceText,
+              translatedText: translation.translatedText,
+              sourceLanguage: sourceLanguage,
+              targetLanguage: targetLanguage,
+              timestamp: DateTime.now(),
+              isFavorite: false,
+              confidence: translation.confidence,
+              alternatives: translation.alternatives,
+            );
+
+            // Save to history
+            final saveResult = await _saveToHistory(historyItem);
+            saveResult.fold(
+              (failure) {
+                print(
+                    '⚠️ Failed to auto-save translation to history: ${failure.message}');
+              },
+              (_) {
+                print('✅ Translation auto-saved to history');
+              },
+            );
+          } else {
+            print('ℹ️ Auto-save translations is disabled');
+          }
+        },
+      );
+    } catch (e) {
+      print('❌ Error during auto-save to history: $e');
+    }
   }
 
   Future<void> _onDetectLanguage(

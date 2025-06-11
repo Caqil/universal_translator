@@ -1,4 +1,4 @@
-// lib/core/services/injection_container.dart - UPDATED WITH CAMERA DEPENDENCIES
+// lib/core/services/injection_container.dart - FIXED VERSION
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +9,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 
 import '../constants/app_constants.dart';
+import '../../features/history/data/models/history_item_model.dart';
 import 'injection_container.config.dart';
 
 final sl = GetIt.instance;
@@ -97,41 +98,8 @@ Future<void> _registerManualDependencies() async {
   }
 }
 
-/// Safe registration helper for lazy singletons
-void _safeRegisterLazySingleton<T extends Object>(
-  T Function() factoryFunc,
-  String name,
-) {
-  try {
-    if (!sl.isRegistered<T>()) {
-      sl.registerLazySingleton<T>(factoryFunc);
-      debugPrint('  ✅ $name registered');
-    } else {
-      debugPrint('  ℹ️ $name already registered, skipping');
-    }
-  } catch (e) {
-    debugPrint('  ⚠️ Failed to register $name: $e');
-  }
-}
-
-/// Safe registration helper for factories
-void _safeRegisterFactory<T extends Object>(
-  T Function() factoryFunc,
-  String name,
-) {
-  try {
-    if (!sl.isRegistered<T>()) {
-      sl.registerFactory<T>(factoryFunc);
-      debugPrint('  ✅ $name registered');
-    } else {
-      debugPrint('  ℹ️ $name already registered, skipping');
-    }
-  } catch (e) {
-    debugPrint('  ⚠️ Failed to register $name: $e');
-  }
-}
-
 /// Initialize Hive storage boxes - Register as named instances for injectable
+/// **FIXED: Proper type registration for historyBox**
 Future<void> _initializeHiveBoxes() async {
   try {
     // Translations Box
@@ -148,8 +116,8 @@ Future<void> _initializeHiveBoxes() async {
 
     // Languages Box
     if (!sl.isRegistered<Box>(instanceName: 'languagesBox')) {
-      final languagesBox =
-          await Hive.openBox('languages').timeout(const Duration(seconds: 10));
+      final languagesBox = await Hive.openBox(AppConstants.languagesBoxName)
+          .timeout(const Duration(seconds: 10));
       sl.registerLazySingleton<Box>(
         () => languagesBox,
         instanceName: 'languagesBox',
@@ -159,22 +127,25 @@ Future<void> _initializeHiveBoxes() async {
 
     // Settings Box
     if (!sl.isRegistered<Box>(instanceName: 'settingsBox')) {
-      final settingsBox =
-          await Hive.openBox('settings').timeout(const Duration(seconds: 10));
+      final settingsBox = await Hive.openBox(AppConstants.settingsBoxName)
+          .timeout(const Duration(seconds: 10));
       sl.registerLazySingleton<Box>(
         () => settingsBox,
         instanceName: 'settingsBox',
       );
       debugPrint('✅ Settings box registered');
     }
-    if (!sl.isRegistered<Box>(instanceName: 'historyBox')) {
-      final historyBox = await Hive.openBox(AppConstants.historyBoxName)
-          .timeout(const Duration(seconds: 10));
-      sl.registerLazySingleton<Box>(
+
+    // History Box - **FIXED: Register with correct type**
+    if (!sl.isRegistered<Box<HistoryItemModel>>(instanceName: 'historyBox')) {
+      final historyBox =
+          await Hive.openBox<HistoryItemModel>(AppConstants.historyBoxName)
+              .timeout(const Duration(seconds: 10));
+      sl.registerLazySingleton<Box<HistoryItemModel>>(
         () => historyBox,
         instanceName: 'historyBox',
       );
-      debugPrint('✅ History box registered');
+      debugPrint('✅ History box registered with correct type');
     }
   } catch (e) {
     debugPrint('❌ Hive boxes initialization failed: $e');

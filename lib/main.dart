@@ -1,4 +1,4 @@
-// lib/main.dart
+// lib/main.dart - VERIFIED SETUP FOR HIVE
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -20,7 +20,6 @@ import 'core/utils/cache_repair_utility.dart';
 import 'features/history/data/models/history_item_model.dart';
 import 'features/history/presentation/bloc/history_event.dart';
 import 'features/settings/data/models/app_settings_model.dart';
-
 import 'features/settings/data/models/settings_model.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';
@@ -33,7 +32,7 @@ void main() async {
   // Initialize system UI
   await _initializeSystemUI();
 
-  // Register Hive adapters before initializing Hive
+  // **CRITICAL: Register Hive adapters BEFORE initializing dependency injection**
   await _registerHiveAdapters();
 
   // Initialize Hive
@@ -42,9 +41,9 @@ void main() async {
   // Initialize cache repair utility
   await CacheRepairUtility.repairAllCaches();
 
-  // Initialize dependency injection
+  // **IMPORTANT: Initialize dependency injection AFTER Hive adapters are registered**
   try {
-    await init();
+    await init(); // This calls your injection_container.dart init()
     debugPrint('✅ App initialization completed successfully');
   } catch (e) {
     debugPrint('❌ App initialization failed: $e');
@@ -82,25 +81,49 @@ void main() async {
   );
 }
 
-/// Register all Hive adapters
+/// **CRITICAL: Register all Hive adapters BEFORE opening any boxes**
 Future<void> _registerHiveAdapters() async {
   try {
-    // Only register if not already registered
-    if (!Hive.isAdapterRegistered(5)) {
-      Hive.registerAdapter(SettingsModelAdapter());
-    }
+    debugPrint('🔄 Registering Hive adapters...');
+
+    // **Check if adapters are already registered to avoid duplicate registration**
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(AppThemeAdapter());
+      debugPrint('✅ AppThemeAdapter registered (typeId: 1)');
     }
+
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(DataUsageModeAdapter());
+      debugPrint('✅ DataUsageModeAdapter registered (typeId: 2)');
     }
+
+    // **CRITICAL: HistoryItemModel adapter MUST be registered before opening historyBox**
     if (!Hive.isAdapterRegistered(3)) {
       Hive.registerAdapter(HistoryItemModelAdapter());
+      debugPrint('✅ HistoryItemModelAdapter registered (typeId: 3)');
     }
+
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(SettingsModelAdapter());
+      debugPrint('✅ SettingsModelAdapter registered (typeId: 5)');
+    }
+
     debugPrint('✅ All Hive adapters registered successfully');
   } catch (e) {
     debugPrint('❌ Failed to register Hive adapters: $e');
+    rethrow; // This is critical - app cannot continue without adapters
+  }
+}
+
+/// Initialize Hive database
+Future<void> _initializeHive() async {
+  try {
+    debugPrint('🔄 Initializing Hive...');
+    await Hive.initFlutter();
+    debugPrint('✅ Hive initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Failed to initialize Hive: $e');
+    rethrow;
   }
 }
 
@@ -113,38 +136,22 @@ Future<void> _initializeSystemUI() async {
       DeviceOrientation.portraitDown,
     ]);
 
-    // Set system UI overlay style
+    // Set system UI overlay style for Android
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
 
-    // Enable edge-to-edge display
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
-    debugPrint('✅ System UI initialized successfully');
+    debugPrint('✅ System UI initialized');
   } catch (e) {
     debugPrint('❌ Failed to initialize system UI: $e');
   }
 }
 
-/// Initialize Hive database
-Future<void> _initializeHive() async {
-  try {
-    await Hive.initFlutter();
-    debugPrint('✅ Hive initialized successfully');
-  } catch (e) {
-    debugPrint('❌ Failed to initialize Hive: $e');
-  }
-}
-
-/// Main application widget
 class TranslateApp extends StatelessWidget {
   const TranslateApp({super.key});
 

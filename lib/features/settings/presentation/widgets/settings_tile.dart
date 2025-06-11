@@ -411,7 +411,7 @@ class _SettingsTileState extends State<SettingsTile>
             Icon(
               Iconsax.arrow_down_1,
               size: AppConstants.iconSizeSmall,
-              color: AppColors.mutedForeground(brightness),
+              color: AppColors.primary(brightness),
             ),
           ],
         );
@@ -429,7 +429,7 @@ class _SettingsTileState extends State<SettingsTile>
         return Icon(
           Iconsax.info_circle,
           size: AppConstants.iconSizeRegular,
-          color: AppColors.mutedForeground(brightness),
+          color: AppColors.primary(brightness),
         );
 
       case SettingsTileType.slider:
@@ -556,7 +556,7 @@ class _SelectionBottomSheet extends StatelessWidget {
             margin: const EdgeInsets.symmetric(
                 vertical: AppConstants.defaultPadding),
             decoration: BoxDecoration(
-              color: AppColors.mutedForeground(brightness),
+              color: AppColors.primary(brightness),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

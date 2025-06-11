@@ -34,6 +34,13 @@ abstract class HistoryRepository {
   /// Import history from JSON
   Future<Either<Failure, void>> importHistory(Map<String, dynamic> data);
 
+  Future<Either<Failure, List<HistoryItem>>> getHistoryByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    int? limit,
+    int? offset,
+  });
+
   /// Get history grouped by date
   Future<Either<Failure, Map<String, List<HistoryItem>>>> getGroupedHistory();
 }

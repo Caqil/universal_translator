@@ -7,6 +7,7 @@ import '../../domain/repositories/history_repository.dart';
 import '../datasources/history_local_datasource.dart';
 import '../models/history_item_model.dart';
 
+/// Implementation of history repository
 @LazySingleton(as: HistoryRepository)
 class HistoryRepositoryImpl implements HistoryRepository {
   final HistoryLocalDataSource _localDataSource;
@@ -161,6 +162,27 @@ class HistoryRepositoryImpl implements HistoryRepository {
         message: 'Unexpected error occurred while importing history',
         code: 'UNKNOWN_ERROR',
       ));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<HistoryItem>>> getHistoryByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      final items = await _localDataSource.getHistoryByDateRange(
+        startDate: startDate,
+        endDate: endDate,
+        limit: limit,
+        offset: offset,
+      );
+
+      return Right(items.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      return Left(CacheFailure(message: 'Failed to get history by date range: $e'));
     }
   }
 

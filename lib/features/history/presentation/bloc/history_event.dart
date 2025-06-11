@@ -25,6 +25,26 @@ class LoadHistoryEvent extends HistoryEvent {
   List<Object?> get props => [limit, offset, refresh];
 }
 
+class LoadHistoryByDateEvent extends HistoryEvent {
+  /// Number of days to look back from today
+  final int days;
+
+  /// Optional limit for results
+  final int? limit;
+
+  /// Optional offset for pagination
+  final int? offset;
+
+  const LoadHistoryByDateEvent({
+    required this.days,
+    this.limit,
+    this.offset,
+  });
+
+  @override
+  List<Object?> get props => [days, limit, offset];
+}
+
 /// Event to search history
 class SearchHistoryEvent extends HistoryEvent {
   final String query;

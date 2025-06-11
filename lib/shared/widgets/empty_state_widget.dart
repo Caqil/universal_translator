@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../core/constants/app_constants.dart';
 
 class EmptyStateWidget extends StatelessWidget {
@@ -17,7 +18,8 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return ShadCard(
+        child: Center(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
         child: Column(
@@ -26,7 +28,6 @@ class EmptyStateWidget extends StatelessWidget {
             Icon(
               icon,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
@@ -57,6 +58,6 @@ class EmptyStateWidget extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
