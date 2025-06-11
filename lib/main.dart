@@ -17,6 +17,8 @@ import 'core/constants/app_constants.dart';
 import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
+import 'features/conversation/presentation/bloc/conversation_bloc.dart';
+import 'features/conversation/presentation/bloc/conversation_event.dart';
 import 'features/history/data/models/history_item_model.dart';
 import 'features/history/presentation/bloc/history_event.dart';
 import 'features/settings/data/models/app_settings_model.dart';
@@ -107,7 +109,18 @@ Future<void> _registerHiveAdapters() async {
       Hive.registerAdapter(SettingsModelAdapter());
       debugPrint('✅ SettingsModelAdapter registered (typeId: 5)');
     }
-
+    if (!Hive.isAdapterRegistered(6)) {
+      Hive.registerAdapter(ConversationModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(7)) {
+      Hive.registerAdapter(MessageTypeAdapterAdapter());
+    }
+    if (!Hive.isAdapterRegistered(8)) {
+      Hive.registerAdapter(MessageSenderAdapterAdapter());
+    }
+    if (!Hive.isAdapterRegistered(9)) {
+      Hive.registerAdapter(MessageModelAdapter());
+    }
     debugPrint('✅ All Hive adapters registered successfully');
   } catch (e) {
     debugPrint('❌ Failed to register Hive adapters: $e');
@@ -174,6 +187,10 @@ class TranslateApp extends StatelessWidget {
         BlocProvider<SpeechBloc>(
           create: (context) =>
               sl<SpeechBloc>()..add(const InitializeSpeechEvent()),
+        ),
+        BlocProvider<ConversationBloc>(
+          create: (context) =>
+              sl<ConversationBloc>()..add(const LoadConversationsEvent()),
         ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(

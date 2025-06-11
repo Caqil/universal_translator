@@ -16,7 +16,24 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:internet_connection_checker/internet_connection_checker.dart'
     as _i973;
 import 'package:speech_to_text/speech_to_text.dart' as _i941;
+import 'package:uuid/uuid.dart' as _i706;
 
+import '../../features/conversation/data/datasources/conversation_local_datasource.dart'
+    as _i411;
+import '../../features/conversation/data/datasources/conversation_local_datasource_impl.dart'
+    as _i923;
+import '../../features/conversation/data/repositories/conversation_repository_impl.dart'
+    as _i144;
+import '../../features/conversation/domain/entities/message.dart' as _i996;
+import '../../features/conversation/domain/repositories/conversation_repository.dart'
+    as _i937;
+import '../../features/conversation/domain/usecases/add_message.dart' as _i426;
+import '../../features/conversation/domain/usecases/start_conversation.dart'
+    as _i790;
+import '../../features/conversation/domain/usecases/translate_message.dart'
+    as _i690;
+import '../../features/conversation/presentation/bloc/conversation_bloc.dart'
+    as _i943;
 import '../../features/history/data/datasources/history_local_datasource.dart'
     as _i665;
 import '../../features/history/data/models/history_item_model.dart' as _i13;
@@ -83,12 +100,25 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i895.Connectivity>(() => networkModule.connectivity);
   gh.lazySingleton<_i973.InternetConnectionChecker>(
       () => networkModule.internetConnectionChecker);
+  gh.lazySingleton<_i411.ConversationLocalDataSource>(
+      () => _i923.ConversationLocalDataSourceImpl());
+  gh.factory<_i790.StartConversationParams>(() => _i790.StartConversationParams(
+        title: gh<String>(),
+        sourceLanguage: gh<String>(),
+        targetLanguage: gh<String>(),
+        participantName: gh<String>(),
+        category: gh<String>(),
+      ));
   gh.lazySingleton<_i657.TranslationLocalDataSource>(
       () => _i657.TranslationLocalDataSourceImpl(
             gh<_i979.Box<dynamic>>(instanceName: 'translationsBox'),
             gh<_i979.Box<dynamic>>(instanceName: 'languagesBox'),
             gh<_i979.Box<dynamic>>(instanceName: 'settingsBox'),
           ));
+  gh.factory<_i690.TranslateMessageParams>(() => _i690.TranslateMessageParams(
+        messageId: gh<String>(),
+        targetLanguage: gh<String>(),
+      ));
   gh.lazySingleton<_i723.SettingsLocalDataSource>(() =>
       _i723.SettingsLocalDataSourceImpl(
           gh<_i979.Box<dynamic>>(instanceName: 'settingsBox')));
@@ -105,16 +135,44 @@ _i174.GetIt $initGetIt(
         gh<_i895.Connectivity>(),
         gh<_i973.InternetConnectionChecker>(),
       ));
+  gh.lazySingleton<_i937.ConversationRepository>(
+      () => _i144.ConversationRepositoryImpl(
+            gh<_i411.ConversationLocalDataSource>(),
+            gh<_i706.Uuid>(),
+          ));
+  gh.factory<_i426.AddMessageParams>(() => _i426.AddMessageParams(
+        conversationId: gh<String>(),
+        originalText: gh<String>(),
+        originalLanguage: gh<String>(),
+        type: gh<_i996.MessageType>(),
+        sender: gh<_i996.MessageSender>(),
+        translatedText: gh<String>(),
+        translatedLanguage: gh<String>(),
+        voiceFilePath: gh<String>(),
+        voiceDuration: gh<int>(),
+      ));
   gh.lazySingleton<_i142.HistoryRepository>(
       () => _i751.HistoryRepositoryImpl(gh<_i665.HistoryLocalDataSource>()));
   gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i723.SettingsLocalDataSource>()));
+  gh.factory<_i690.TranslateMessage>(
+      () => _i690.TranslateMessage(gh<_i937.ConversationRepository>()));
+  gh.factory<_i426.AddMessage>(
+      () => _i426.AddMessage(gh<_i937.ConversationRepository>()));
+  gh.factory<_i790.StartConversation>(
+      () => _i790.StartConversation(gh<_i937.ConversationRepository>()));
   gh.lazySingleton<_i683.TranslationRepository>(
       () => _i645.TranslationRepositoryImpl(
             gh<_i440.TranslationRemoteDataSource>(),
             gh<_i657.TranslationLocalDataSource>(),
             gh<_i932.NetworkInfo>(),
           ));
+  gh.factory<_i943.ConversationBloc>(() => _i943.ConversationBloc(
+        gh<_i937.ConversationRepository>(),
+        gh<_i790.StartConversation>(),
+        gh<_i426.AddMessage>(),
+        gh<_i690.TranslateMessage>(),
+      ));
   gh.lazySingleton<_i921.SpeechRepository>(
       () => _i753.SpeechRepositoryImpl(gh<_i334.SpeechDataSource>()));
   gh.factory<_i339.StopListening>(

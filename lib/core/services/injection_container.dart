@@ -8,6 +8,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../features/conversation/data/models/conversation_model.dart';
+import '../../features/conversation/data/models/message_model.dart';
 import '../constants/app_constants.dart';
 import '../../features/history/data/models/history_item_model.dart';
 import 'injection_container.config.dart';
@@ -147,6 +149,15 @@ Future<void> _initializeHiveBoxes() async {
       );
       debugPrint('✅ History box registered with correct type');
     }
+    // Conversation boxes (new)
+    final conversationsBox =
+        await Hive.openBox<ConversationModel>('conversations');
+    sl.registerSingleton<Box<ConversationModel>>(conversationsBox,
+        instanceName: 'conversationsBox');
+
+    final messagesBox = await Hive.openBox<MessageModel>('messages');
+    sl.registerSingleton<Box<MessageModel>>(messagesBox,
+        instanceName: 'messagesBox');
   } catch (e) {
     debugPrint('❌ Hive boxes initialization failed: $e');
     rethrow;
