@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:translate_app/features/settings/presentation/pages/settings_page.dart';
 import 'package:translate_app/features/translation/presentation/pages/translation_page.dart';
 import '../../config/routes/app_router.dart';
+import '../../core/services/injection_container.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../features/camera/presentation/pages/camera_page.dart';
+import '../../features/history/presentation/bloc/history_bloc.dart';
+import '../../features/history/presentation/pages/history_page.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/quick_actions_bottom_sheet.dart';
 
@@ -24,8 +29,19 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
     const TranslationPage(),
     const CameraPage(),
     const ConversationPage(),
-    const HistoryPage(),
-    const FavoritesPage(),
+    // In your navigation/routing, only create HistoryBloc when the page is actually accessed
+    BlocProvider(
+      create: (context) {
+        // Only create if dependencies are ready
+        if (sl.isRegistered<HistoryBloc>()) {
+          return sl<HistoryBloc>();
+        } else {
+          throw Exception('History dependencies not ready yet');
+        }
+      },
+      child: const HistoryPage(),
+    ),
+    const SettingsPage(),
   ];
 
   /// Handle tab tap

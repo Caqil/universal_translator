@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:translate_app/config/routes/app_router.dart';
+import 'package:translate_app/features/history/presentation/bloc/history_bloc.dart';
 import 'package:translate_app/features/speech/presentation/bloc/speech_bloc.dart';
 import 'package:translate_app/features/speech/presentation/bloc/speech_event.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
@@ -16,6 +17,8 @@ import 'core/constants/app_constants.dart';
 import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
+import 'features/history/data/models/history_item_model.dart';
+import 'features/history/presentation/bloc/history_event.dart';
 import 'features/settings/data/models/app_settings_model.dart';
 
 import 'features/settings/data/models/settings_model.dart';
@@ -92,6 +95,9 @@ Future<void> _registerHiveAdapters() async {
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(DataUsageModeAdapter());
     }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(HistoryItemModelAdapter());
+    }
     debugPrint('✅ All Hive adapters registered successfully');
   } catch (e) {
     debugPrint('❌ Failed to register Hive adapters: $e');
@@ -147,7 +153,9 @@ class TranslateApp extends StatelessWidget {
     final colorScheme = ShadColorScheme.fromName('violet');
     return MultiBlocProvider(
       providers: [
-        // Settings BLoC - Global
+        BlocProvider<HistoryBloc>(
+          create: (context) => sl<HistoryBloc>()..add(const LoadHistoryEvent()),
+        ),
         BlocProvider<SettingsBloc>(
           create: (context) =>
               sl<SettingsBloc>()..add(const LoadSettingsEvent()),

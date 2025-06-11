@@ -65,13 +65,6 @@ class _SettingsPageState extends State<SettingsPage>
       appBar: AppBar(
         backgroundColor: AppColors.background(brightness),
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(
-            Iconsax.arrow_left_2,
-            color: AppColors.primary(brightness),
-          ),
-        ),
         title: Text(
           'settings.settings'.tr(),
           style: AppTextStyles.titleLarge.copyWith(

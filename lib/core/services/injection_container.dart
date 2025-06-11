@@ -8,6 +8,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 
+import '../constants/app_constants.dart';
 import 'injection_container.config.dart';
 
 final sl = GetIt.instance;
@@ -135,8 +136,9 @@ Future<void> _initializeHiveBoxes() async {
   try {
     // Translations Box
     if (!sl.isRegistered<Box>(instanceName: 'translationsBox')) {
-      final translationsBox = await Hive.openBox('translations_history')
-          .timeout(const Duration(seconds: 10));
+      final translationsBox =
+          await Hive.openBox(AppConstants.translationsBoxName)
+              .timeout(const Duration(seconds: 10));
       sl.registerLazySingleton<Box>(
         () => translationsBox,
         instanceName: 'translationsBox',
@@ -164,6 +166,15 @@ Future<void> _initializeHiveBoxes() async {
         instanceName: 'settingsBox',
       );
       debugPrint('✅ Settings box registered');
+    }
+    if (!sl.isRegistered<Box>(instanceName: 'historyBox')) {
+      final historyBox = await Hive.openBox(AppConstants.historyBoxName)
+          .timeout(const Duration(seconds: 10));
+      sl.registerLazySingleton<Box>(
+        () => historyBox,
+        instanceName: 'historyBox',
+      );
+      debugPrint('✅ History box registered');
     }
   } catch (e) {
     debugPrint('❌ Hive boxes initialization failed: $e');

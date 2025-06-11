@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/camera/presentation/pages/camera_page.dart';
+import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
@@ -359,17 +360,6 @@ class ConversationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Conversation')),
       body: const Center(child: Text('Conversation - To be implemented')),
-    );
-  }
-}
-
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('History')),
-      body: const Center(child: Text('History - To be implemented')),
     );
   }
 }

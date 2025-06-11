@@ -17,6 +17,19 @@ import 'package:internet_connection_checker/internet_connection_checker.dart'
     as _i973;
 import 'package:speech_to_text/speech_to_text.dart' as _i941;
 
+import '../../features/history/data/datasources/history_local_datasource.dart'
+    as _i665;
+import '../../features/history/data/models/history_item_model.dart' as _i13;
+import '../../features/history/data/repositories/history_repository_impl.dart'
+    as _i751;
+import '../../features/history/domain/repositories/history_repository.dart'
+    as _i142;
+import '../../features/history/domain/usecases/clear_history.dart' as _i772;
+import '../../features/history/domain/usecases/delete_history_item.dart'
+    as _i391;
+import '../../features/history/domain/usecases/get_history.dart' as _i886;
+import '../../features/history/domain/usecases/save_to_history.dart' as _i952;
+import '../../features/history/presentation/bloc/history_bloc.dart' as _i1070;
 import '../../features/settings/data/datasources/settings_local_datasource.dart'
     as _i723;
 import '../../features/settings/data/repositories/settings_repository_impl.dart'
@@ -81,6 +94,9 @@ _i174.GetIt $initGetIt(
           gh<_i979.Box<dynamic>>(instanceName: 'settingsBox')));
   gh.lazySingleton<_i440.TranslationRemoteDataSource>(
       () => _i440.TranslationRemoteDataSourceImpl(gh<_i667.DioClient>()));
+  gh.lazySingleton<_i665.HistoryLocalDataSource>(() =>
+      _i665.HistoryLocalDataSourceImpl(
+          gh<_i979.Box<_i13.HistoryItemModel>>(instanceName: 'historyBox')));
   gh.lazySingleton<_i334.SpeechDataSource>(() => _i334.SpeechDataSourceImpl(
         gh<_i941.SpeechToText>(),
         gh<_i50.FlutterTts>(),
@@ -89,6 +105,8 @@ _i174.GetIt $initGetIt(
         gh<_i895.Connectivity>(),
         gh<_i973.InternetConnectionChecker>(),
       ));
+  gh.lazySingleton<_i142.HistoryRepository>(
+      () => _i751.HistoryRepositoryImpl(gh<_i665.HistoryLocalDataSource>()));
   gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i723.SettingsLocalDataSource>()));
   gh.lazySingleton<_i683.TranslationRepository>(
@@ -105,6 +123,21 @@ _i174.GetIt $initGetIt(
       () => _i296.StartListening(gh<_i921.SpeechRepository>()));
   gh.factory<_i351.TextToSpeech>(
       () => _i351.TextToSpeech(gh<_i921.SpeechRepository>()));
+  gh.factory<_i952.SaveToHistory>(
+      () => _i952.SaveToHistory(gh<_i142.HistoryRepository>()));
+  gh.factory<_i886.GetHistory>(
+      () => _i886.GetHistory(gh<_i142.HistoryRepository>()));
+  gh.factory<_i391.DeleteHistoryItem>(
+      () => _i391.DeleteHistoryItem(gh<_i142.HistoryRepository>()));
+  gh.factory<_i772.ClearHistory>(
+      () => _i772.ClearHistory(gh<_i142.HistoryRepository>()));
+  gh.factory<_i1070.HistoryBloc>(() => _i1070.HistoryBloc(
+        gh<_i886.GetHistory>(),
+        gh<_i952.SaveToHistory>(),
+        gh<_i391.DeleteHistoryItem>(),
+        gh<_i772.ClearHistory>(),
+        gh<_i142.HistoryRepository>(),
+      ));
   gh.factory<_i558.GetSettings>(
       () => _i558.GetSettings(gh<_i674.SettingsRepository>()));
   gh.factory<_i558.GetSetting<dynamic>>(
