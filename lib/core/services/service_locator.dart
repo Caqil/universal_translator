@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:get_it/get_it.dart';
-import '../constants/app_constants.dart';
 
 /// Service locator wrapper for GetIt
 /// Provides a cleaner interface for dependency access

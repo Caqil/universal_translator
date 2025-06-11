@@ -1,0 +1,230 @@
+{
+  "app_name": "Universal Translator",
+  
+  "common": {
+    "loading": "Loading...",
+    "error": "Error", 
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "save": "Save",
+    "delete": "Delete",
+    "close": "Close",
+    "copy": "Copy",
+    "share": "Share",
+    "yes": "Yes",
+    "no": "No",
+    "auto": "Auto",
+    "version": "Version",
+    "build": "Build"
+  },
+
+  "navigation": {
+    "nav_translate": "Translate",
+    "nav_translate_tooltip": "Text translation",
+    "nav_camera": "Camera",
+    "nav_camera_tooltip": "Camera translation",
+    "nav_conversation": "Conversation",
+    "nav_conversation_tooltip": "Conversation mode", 
+    "nav_history": "History",
+    "nav_history_tooltip": "Translation history",
+    "nav_favorites": "Favorites",
+    "nav_favorites_tooltip": "Favorite translations"
+  },
+
+  "translation": {
+    "translate": "Translate",
+    "source_language": "Source Language",
+    "target_language": "Target Language", 
+    "swap_languages": "Swap Languages",
+    "enter_text": "Enter Text",
+    "enter_text_to_translate": "Enter text to translate...",
+    "detect_language": "Detect Language",
+    "detected_language": "Detected Language",
+    "translating_text": "Translating...",
+    "translation_placeholder": "Your translation will appear here",
+    "text_copied": "Text copied to clipboard",
+    "alternatives": "Alternative Translations",
+    "confidence": "Confidence",
+    "stop_speaking": "Stop Speaking", 
+    "speak_text": "Speak Text",
+    "remove_favorite": "Remove from Favorites",
+    "add_favorite": "Add to Favorites",
+    "view_fullscreen": "View Full Screen"
+  },
+
+  "loading": {
+    "loading_default": "Loading...",
+    "loading_translation": "Translating your text...",
+    "loading_languages": "Loading languages...",
+    "loading_history": "Loading history...",
+    "loading_favorites": "Loading favorites..."
+  },
+
+  "errors": {
+    "error_network_title": "Network Error",
+    "error_network_message": "Please check your internet connection",
+    "error_network_description": "Unable to connect to translation service",
+    "error_server_title": "Server Error", 
+    "error_server_message": "Translation service is temporarily unavailable",
+    "error_server_description": "Please try again in a few moments",
+    "error_not_found_title": "Not Found",
+    "error_not_found_message": "The requested content was not found",
+    "error_generic_title": "Something went wrong",
+    "error_generic_message": "An unexpected error occurred",
+    "button_retry": "Try Again",
+    "button_go_back": "Go Back"
+  },
+
+  "settings": {
+    "settings": "Settings",
+    "appearance": "Appearance",
+    "language_translation": "Language & Translation",
+    "speech_audio": "Speech & Audio",
+    "accessibility": "Accessibility", 
+    "data_privacy": "Data & Privacy",
+    "app_info": "App Info",
+    
+    "theme": "Theme",
+    "light_theme_description": "Clean and bright interface",
+    "dark_theme_description": "Dark interface for low light",
+    "system_theme_description": "Follows your device setting",
+    
+    "language": "Language",
+    "interface_language": "Choose your interface language",
+    "auto_translate": "Auto Translate",
+    "auto_translate_description": "Automatically translate text as you type",
+    "auto_translate_delay": "Auto Translate Delay", 
+    "auto_translate_delay_description": "Delay before automatic translation starts",
+    "auto_detect_language": "Auto Detect Language",
+    "auto_detect_language_description": "Automatically detect input language",
+    
+    "speech_feedback": "Speech Feedback",
+    "speech_feedback_description": "Enable text-to-speech for translations",
+    "speech_rate": "Speech Rate",
+    "speech_rate_description": "Speed of speech synthesis",
+    "speech_pitch": "Speech Pitch",
+    "speech_pitch_description": "Pitch of speech synthesis", 
+    "sound_effects": "Sound Effects",
+    "sound_effects_description": "Enable app sound effects",
+    "haptic_feedback": "Haptic Feedback",
+    "haptic_feedback_description": "Enable vibration feedback",
+    
+    "font_size": "Font Size",
+    "font_size_description": "Adjust text size throughout the app",
+    "high_contrast": "High Contrast",
+    "high_contrast_description": "Increase contrast for better visibility",
+    "reduce_motion": "Reduce Motion",
+    "reduce_motion_description": "Minimize animations and transitions",
+    
+    "data_usage": "Data Usage",
+    "data_usage_description": "Control how much data the app uses",
+    "offline_mode": "Offline Mode", 
+    "offline_mode_description": "Enable offline translation features",
+    "analytics": "Analytics",
+    "analytics_description": "Help improve the app by sharing usage data",
+    "crash_reporting": "Crash Reporting",
+    "crash_reporting_description": "Automatically report app crashes",
+    
+    "about_app": "About App",
+    "app_version_info": "Version and build information",
+    "export_settings": "Export Settings",
+    "export_settings_description": "Save your settings to file", 
+    "import_settings": "Import Settings",
+    "import_settings_description": "Restore settings from file",
+    
+    "reset_settings": "Reset Settings",
+    "reset_settings_confirmation": "Are you sure you want to reset all settings to default? This action cannot be undone.",
+    "settings_error": "Unable to Load Settings",
+    "no_settings": "No Settings Available",
+    "export_settings_coming_soon": "Export settings feature coming soon",
+    "import_settings_coming_soon": "Import settings feature coming soon"
+  },
+
+  "languages": {
+    "select_language": "Select Language",
+    "search_languages": "Search languages...",
+    "show_all_languages": "Show All Languages", 
+    "show_popular": "Show Popular",
+    "languages": "languages",
+    "auto_detect": "Auto Detect",
+    "recent_languages": "Recent Languages",
+    "popular_languages": "Popular Languages"
+  },
+
+  "voice": {
+    "listening": "Listening...",
+    "speak_now": "Speak now",
+    "voice_input": "Voice Input",
+    "start_speaking": "Start Speaking",
+    "stop_listening": "Stop Listening",
+    "voice_permission_denied": "Microphone permission is required for voice input",
+    "voice_not_available": "Voice input is not available on this device",
+    "voice_error": "Voice input error occurred"
+  },
+
+  "camera": {
+    "camera_translation": "Camera Translation",
+    "take_photo": "Take Photo",
+    "select_image": "Select Image", 
+    "camera_permission_denied": "Camera permission is required",
+    "processing_image": "Processing image...",
+    "no_text_found": "No text found in image",
+    "camera_error": "Camera error occurred"
+  },
+
+  "history": {
+    "translation_history": "Translation History",
+    "clear_history": "Clear History",
+    "clear_all_history": "Clear All History",
+    "no_history": "No translation history yet",
+    "history_cleared": "History cleared",
+    "search_history": "Search history...",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "this_week": "This Week",
+    "this_month": "This Month",
+    "older": "Older"
+  },
+
+  "favorites": {
+    "favorite_translations": "Favorite Translations",
+    "no_favorites": "No favorite translations yet",
+    "add_to_favorites": "Add to Favorites",
+    "remove_from_favorites": "Remove from Favorites", 
+    "favorites_limit_reached": "Favorites limit reached",
+    "search_favorites": "Search favorites..."
+  },
+
+  "conversation": {
+    "conversation_mode": "Conversation Mode",
+    "start_conversation": "Start Conversation",
+    "end_conversation": "End Conversation",
+    "person_a": "Person A",
+    "person_b": "Person B",
+    "switch_speaker": "Switch Speaker",
+    "conversation_history": "Conversation History",
+    "save_conversation": "Save Conversation",
+    "new_conversation": "New Conversation"
+  },
+
+  "permissions": {
+    "microphone_permission": "Microphone Permission",
+    "camera_permission": "Camera Permission", 
+    "storage_permission": "Storage Permission",
+    "permission_required": "Permission Required",
+    "permission_denied": "Permission Denied",
+    "grant_permission": "Grant Permission",
+    "permission_settings": "Open Settings"
+  },
+
+  "offline": {
+    "offline_mode": "Offline Mode",
+    "offline_translation": "Offline Translation",
+    "download_language": "Download Language",
+    "language_downloaded": "Language Downloaded",
+    "download_failed": "Download Failed",
+    "storage_space_required": "Storage space required",
+    "offline_not_available": "Offline translation not available for this language pair"
+  }
+}

@@ -234,11 +234,40 @@ class UpdateDataUsageModeEvent extends SettingsEvent {
   List<Object?> get props => [mode];
 }
 
+/// Event to toggle analytics consent
+class ToggleAnalyticsEvent extends SettingsEvent {
+  final bool enabled;
+
+  const ToggleAnalyticsEvent(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
+/// Event to toggle crash reporting consent
+class ToggleCrashReportingEvent extends SettingsEvent {
+  final bool enabled;
+
+  const ToggleCrashReportingEvent(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 /// Event to update font size multiplier
 class UpdateFontSizeMultiplierEvent extends SettingsEvent {
   final double multiplier;
 
   const UpdateFontSizeMultiplierEvent(this.multiplier);
+
+  @override
+  List<Object?> get props => [multiplier];
+}
+
+class UpdateFontSizeEvent extends SettingsEvent {
+  final double multiplier;
+
+  const UpdateFontSizeEvent(this.multiplier);
 
   @override
   List<Object?> get props => [multiplier];

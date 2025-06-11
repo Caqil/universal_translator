@@ -17,6 +17,15 @@ import 'package:internet_connection_checker/internet_connection_checker.dart'
     as _i973;
 import 'package:speech_to_text/speech_to_text.dart' as _i941;
 
+import '../../features/settings/data/datasources/settings_local_datasource.dart'
+    as _i723;
+import '../../features/settings/data/repositories/settings_repository_impl.dart'
+    as _i955;
+import '../../features/settings/domain/repositories/settings_repository.dart'
+    as _i674;
+import '../../features/settings/domain/usecases/get_settings.dart' as _i558;
+import '../../features/settings/domain/usecases/update_settings.dart' as _i986;
+import '../../features/settings/presentation/bloc/settings_bloc.dart' as _i585;
 import '../../features/speech/data/datasources/speech_datasource.dart' as _i334;
 import '../../features/speech/data/repositories/speech_repository_impl.dart'
     as _i753;
@@ -66,6 +75,9 @@ _i174.GetIt $initGetIt(
             gh<_i979.Box<dynamic>>(instanceName: 'languagesBox'),
             gh<_i979.Box<dynamic>>(instanceName: 'settingsBox'),
           ));
+  gh.lazySingleton<_i723.SettingsLocalDataSource>(() =>
+      _i723.SettingsLocalDataSourceImpl(
+          gh<_i979.Box<dynamic>>(instanceName: 'settingsBox')));
   gh.lazySingleton<_i334.SpeechDataSource>(() => _i334.SpeechDataSourceImpl(
         gh<_i941.SpeechToText>(),
         gh<_i50.FlutterTts>(),
@@ -74,6 +86,10 @@ _i174.GetIt $initGetIt(
         gh<_i895.Connectivity>(),
         gh<_i973.InternetConnectionChecker>(),
       ));
+  gh.factory<_i723.SettingsMigrationHelper>(
+      () => _i723.SettingsMigrationHelper(gh<_i723.SettingsLocalDataSource>()));
+  gh.lazySingleton<_i674.SettingsRepository>(
+      () => _i955.SettingsRepositoryImpl(gh<_i723.SettingsLocalDataSource>()));
   gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(gh<_i932.NetworkInfo>()));
   gh.lazySingleton<_i921.SpeechRepository>(
@@ -84,6 +100,37 @@ _i174.GetIt $initGetIt(
       () => _i296.StartListening(gh<_i921.SpeechRepository>()));
   gh.factory<_i351.TextToSpeech>(
       () => _i351.TextToSpeech(gh<_i921.SpeechRepository>()));
+  gh.factory<_i558.GetSettings>(
+      () => _i558.GetSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i558.GetSetting<dynamic>>(
+      () => _i558.GetSetting<dynamic>(gh<_i674.SettingsRepository>()));
+  gh.factory<_i558.HasSettings>(
+      () => _i558.HasSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i558.WatchSettings>(
+      () => _i558.WatchSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i558.ExportSettings>(
+      () => _i558.ExportSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.UpdateSettings>(
+      () => _i986.UpdateSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.UpdateSetting<dynamic>>(
+      () => _i986.UpdateSetting<dynamic>(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.ResetSettings>(
+      () => _i986.ResetSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.ImportSettings>(
+      () => _i986.ImportSettings(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.UpdateTheme>(
+      () => _i986.UpdateTheme(gh<_i674.SettingsRepository>()));
+  gh.factory<_i986.UpdateLanguage>(
+      () => _i986.UpdateLanguage(gh<_i674.SettingsRepository>()));
+  gh.factory<_i585.SettingsBloc>(() => _i585.SettingsBloc(
+        gh<_i558.GetSettings>(),
+        gh<_i986.UpdateSettings>(),
+        gh<_i986.UpdateSetting<dynamic>>(),
+        gh<_i986.ResetSettings>(),
+        gh<_i558.ExportSettings>(),
+        gh<_i986.ImportSettings>(),
+        gh<_i558.WatchSettings>(),
+      ));
   gh.factory<_i437.SpeechBloc>(() => _i437.SpeechBloc(
         gh<_i296.StartListening>(),
         gh<_i339.StopListening>(),
