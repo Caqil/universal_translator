@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:injectable/injectable.dart';
+
 import '../../domain/usecases/start_listening.dart';
 import '../../domain/usecases/stop_listening.dart';
 import '../../domain/usecases/text_to_speech.dart';
@@ -8,6 +10,7 @@ import '../../domain/repositories/speech_repository.dart';
 import 'speech_event.dart';
 import 'speech_state.dart';
 
+@injectable
 class SpeechBloc extends Bloc<SpeechEvent, SpeechState> {
   final StartListening _startListening;
   final StopListening _stopListening;

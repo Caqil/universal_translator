@@ -72,7 +72,7 @@ class _SettingsPageState extends State<SettingsPage>
           ),
         ),
         title: Text(
-          'settings'.tr(),
+          'settings.settings'.tr(),
           style: AppTextStyles.titleLarge.copyWith(
             color: AppColors.primary(brightness),
             fontWeight: FontWeight.w600,

@@ -395,7 +395,6 @@ class FavoritesPage extends StatelessWidget {
   }
 }
 
-
 class HelpPage extends StatelessWidget {
   const HelpPage({super.key});
   @override

@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/speech_result.dart';
 import '../../domain/repositories/speech_repository.dart';
 import '../datasources/speech_datasource.dart';
+import '../models/speech_result_model.dart';
 
+/// Implementation of speech repository
+@LazySingleton(as: SpeechRepository)
 class SpeechRepositoryImpl implements SpeechRepository {
   final SpeechDataSource _dataSource;
 

@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 import '../../../../core/constants/language_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
@@ -8,6 +9,8 @@ import '../../../../core/utils/validators.dart';
 import '../entities/translation.dart';
 import '../repositories/translation_repository.dart';
 
+/// Use case for translating text
+@injectable
 class TranslateText implements UseCase<Translation, TranslateTextParams> {
   final TranslationRepository _repository;
 
