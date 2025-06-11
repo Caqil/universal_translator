@@ -19,7 +19,7 @@ final sl = GetIt.instance;
 )
 Future<void> configureDependencies() async {
   try {
-    await $initGetIt(sl);
+    $initGetIt(sl);
     debugPrint('✅ Injectable dependencies configured successfully');
   } catch (e) {
     debugPrint('❌ Injectable configuration failed: $e');

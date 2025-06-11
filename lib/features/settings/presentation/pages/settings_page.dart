@@ -86,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage>
               Iconsax.refresh,
               color: AppColors.mutedForeground(brightness),
             ),
-            tooltip: 'reset_settings'.tr(),
+            tooltip: 'settings.reset_settings'.tr(),
           ),
         ],
       ),
@@ -94,22 +94,15 @@ class _SettingsPageState extends State<SettingsPage>
         listener: (context, state) {
           if (state is SettingsOperationCompleted) {
             sonner.show(
-              ShadToast(
+              ShadToast.raw(
+                variant: ShadToastVariant.primary,
                 description: Text(state.message),
-                action: ShadButton(
-                  child: const Text('Undo'),
-                  onPressed: () => sonner.hide(state.message),
-                ),
               ),
             );
           } else if (state is SettingsError) {
             sonner.show(
-              ShadToast(
+              ShadToast.destructive(
                 description: Text(state.message),
-                action: ShadButton(
-                  child: const Text('Undo'),
-                  onPressed: () => sonner.hide(state.message),
-                ),
               ),
             );
           }
@@ -178,8 +171,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'auto_translate'.tr(),
-            description: 'auto_translate_description'.tr(),
+            title: 'settings.auto_translate'.tr(),
+            description: 'settings.auto_translate_description'.tr(),
             leadingIcon: Iconsax.translate,
             type: SettingsTileType.toggle,
             value: settings.autoTranslate,
@@ -189,8 +182,8 @@ class _SettingsPageState extends State<SettingsPage>
           ),
           if (settings.autoTranslate) ...[
             SettingsTile(
-              title: 'auto_translate_delay'.tr(),
-              description: 'auto_translate_delay_description'.tr(),
+              title: 'settings.auto_translate_delay'.tr(),
+              description: 'settings.auto_translate_delay_description'.tr(),
               leadingIcon: Iconsax.timer_1,
               type: SettingsTileType.slider,
               value: settings.autoTranslateDelay.toDouble(),
@@ -206,8 +199,8 @@ class _SettingsPageState extends State<SettingsPage>
             ),
           ],
           SettingsTile(
-            title: 'auto_detect_language'.tr(),
-            description: 'auto_detect_language_description'.tr(),
+            title: 'settings.auto_detect_language'.tr(),
+            description: 'settings.auto_detect_language_description'.tr(),
             leadingIcon: Iconsax.scan,
             type: SettingsTileType.toggle,
             value: settings.autoDetectLanguage,
@@ -221,10 +214,10 @@ class _SettingsPageState extends State<SettingsPage>
 
           // Speech & Audio Section
           _buildSectionHeader(
-              'speech_audio'.tr(), Iconsax.volume_high, brightness),
+              'settings.speech_audio'.tr(), Iconsax.volume_high, brightness),
           SettingsTile(
-            title: 'speech_feedback'.tr(),
-            description: 'speech_feedback_description'.tr(),
+            title: 'settings.speech_feedback'.tr(),
+            description: 'settings.speech_feedback_description'.tr(),
             leadingIcon: Iconsax.volume_high,
             type: SettingsTileType.toggle,
             value: settings.enableSpeechFeedback,
@@ -236,8 +229,8 @@ class _SettingsPageState extends State<SettingsPage>
           ),
           if (settings.enableSpeechFeedback) ...[
             SettingsTile(
-              title: 'speech_rate'.tr(),
-              description: 'speech_rate_description'.tr(),
+              title: 'settings.speech_rate'.tr(),
+              description: 'settings.speech_rate_description'.tr(),
               leadingIcon: Iconsax.forward,
               type: SettingsTileType.slider,
               value: settings.speechRate,
@@ -250,8 +243,8 @@ class _SettingsPageState extends State<SettingsPage>
               },
             ),
             SettingsTile(
-              title: 'speech_pitch'.tr(),
-              description: 'speech_pitch_description'.tr(),
+              title: 'settings.speech_pitch'.tr(),
+              description: 'settings.speech_pitch_description'.tr(),
               leadingIcon: Iconsax.music,
               type: SettingsTileType.slider,
               value: settings.speechPitch,
@@ -265,8 +258,8 @@ class _SettingsPageState extends State<SettingsPage>
             ),
           ],
           SettingsTile(
-            title: 'sound_effects'.tr(),
-            description: 'sound_effects_description'.tr(),
+            title: 'settings.sound_effects'.tr(),
+            description: 'settings.sound_effects_description'.tr(),
             leadingIcon: Iconsax.music_play,
             type: SettingsTileType.toggle,
             value: settings.enableSoundEffects,
@@ -275,8 +268,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'haptic_feedback'.tr(),
-            description: 'haptic_feedback_description'.tr(),
+            title: 'settings.haptic_feedback'.tr(),
+            description: 'settings.haptic_feedback_description'.tr(),
             leadingIcon: Iconsax.mobile,
             type: SettingsTileType.toggle,
             value: settings.enableHapticFeedback,
@@ -289,10 +282,11 @@ class _SettingsPageState extends State<SettingsPage>
           const SizedBox(height: AppConstants.largePadding),
 
           // Accessibility Section
-          _buildSectionHeader('accessibility'.tr(), Iconsax.eye, brightness),
+          _buildSectionHeader(
+              'settings.accessibility'.tr(), Iconsax.eye, brightness),
           SettingsTile(
-            title: 'font_size'.tr(),
-            description: 'font_size_description'.tr(),
+            title: 'settings.font_size'.tr(),
+            description: 'settings.font_size_description'.tr(),
             leadingIcon: Iconsax.text,
             type: SettingsTileType.slider,
             value: settings.fontSizeMultiplier,
@@ -305,8 +299,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'high_contrast'.tr(),
-            description: 'high_contrast_description'.tr(),
+            title: 'settings.high_contrast'.tr(),
+            description: 'settings.high_contrast_description'.tr(),
             leadingIcon: Iconsax.colors_square,
             type: SettingsTileType.toggle,
             value: settings.enableHighContrast,
@@ -315,8 +309,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'reduce_motion'.tr(),
-            description: 'reduce_motion_description'.tr(),
+            title: 'settings.reduce_motion'.tr(),
+            description: 'settings.reduce_motion_description'.tr(),
             leadingIcon: Iconsax.pause,
             type: SettingsTileType.toggle,
             value: settings.enableReduceMotion,
@@ -328,10 +322,10 @@ class _SettingsPageState extends State<SettingsPage>
 
           // Data & Privacy Section
           _buildSectionHeader(
-              'data_privacy'.tr(), Iconsax.shield_tick, brightness),
+              'settings.data_privacy'.tr(), Iconsax.shield_tick, brightness),
           SettingsTile(
-            title: 'data_usage'.tr(),
-            description: 'data_usage_description'.tr(),
+            title: 'settings.data_usage'.tr(),
+            description: 'settings.data_usage_description'.tr(),
             leadingIcon: Iconsax.data,
             type: SettingsTileType.selection,
             value: settings.dataUsageMode,
@@ -341,8 +335,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'offline_mode'.tr(),
-            description: 'offline_mode_description'.tr(),
+            title: 'settings.offline_mode'.tr(),
+            description: 'settings.offline_mode_description'.tr(),
             leadingIcon: Iconsax.wifi_square,
             type: SettingsTileType.toggle,
             value: settings.enableOfflineMode,
@@ -351,8 +345,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'analytics'.tr(),
-            description: 'analytics_description'.tr(),
+            title: 'settings.analytics'.tr(),
+            description: 'settings.analytics_description'.tr(),
             leadingIcon: Iconsax.chart,
             type: SettingsTileType.toggle,
             value: settings.analyticsConsent,
@@ -361,8 +355,8 @@ class _SettingsPageState extends State<SettingsPage>
             },
           ),
           SettingsTile(
-            title: 'crash_reporting'.tr(),
-            description: 'crash_reporting_description'.tr(),
+            title: 'settings.crash_reporting'.tr(),
+            description: 'settings.crash_reporting_description'.tr(),
             leadingIcon: Iconsax.danger,
             type: SettingsTileType.toggle,
             value: settings.crashReportingConsent,
@@ -375,24 +369,25 @@ class _SettingsPageState extends State<SettingsPage>
           const SizedBox(height: AppConstants.largePadding),
 
           // App Info Section
-          _buildSectionHeader('app_info'.tr(), Iconsax.info_circle, brightness),
+          _buildSectionHeader(
+              'settings.app_info'.tr(), Iconsax.info_circle, brightness),
           SettingsTile(
-            title: 'about_app'.tr(),
-            description: 'app_version_info'.tr(),
+            title: 'settings.about_app'.tr(),
+            description: 'settings.app_version_info'.tr(),
             leadingIcon: Iconsax.mobile,
             type: SettingsTileType.navigation,
             onTap: _showAboutDialog,
           ),
           SettingsTile(
-            title: 'export_settings'.tr(),
-            description: 'export_settings_description'.tr(),
+            title: 'settings.export_settings'.tr(),
+            description: 'settings.export_settings_description'.tr(),
             leadingIcon: Iconsax.export,
             type: SettingsTileType.action,
             onTap: _exportSettings,
           ),
           SettingsTile(
-            title: 'import_settings'.tr(),
-            description: 'import_settings_description'.tr(),
+            title: 'settings.import_settings'.tr(),
+            description: 'settings.import_settings_description'.tr(),
             leadingIcon: Iconsax.import,
             type: SettingsTileType.action,
             onTap: _importSettings,
@@ -487,7 +482,7 @@ class _SettingsPageState extends State<SettingsPage>
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             Text(
-              'no_settings'.tr(),
+              'settings.no_settings'.tr(),
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.primary(brightness),
               ),

@@ -76,27 +76,17 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
       body: widget.child,
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: currentIndex,
-        onTap: _onTabTapped,
+        onTap: (i) {
+          if (i == 2) {
+            _showQuickActions(context);
+          } else {
+            _onTabTapped(i);
+          }
+        },
         backgroundColor: AppColors.surface(brightness),
         selectedItemColor: AppColors.primary(brightness),
         unselectedItemColor: AppColors.mutedForeground(brightness),
       ),
-      floatingActionButton: _buildFloatingActionButton(context, brightness),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  /// Build floating action button for quick actions
-  Widget? _buildFloatingActionButton(
-      BuildContext context, Brightness brightness) {
-    return FloatingActionButton(
-      onPressed: () => _showQuickActions(context),
-      backgroundColor: AppColors.primary(brightness),
-      foregroundColor: brightness == Brightness.light
-          ? AppColors.lightPrimaryForeground
-          : AppColors.darkPrimaryForeground,
-      child: const Icon(Icons.translate_rounded),
-      tooltip: 'quick_translate'.tr(),
     );
   }
 

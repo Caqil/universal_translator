@@ -1,5 +1,35 @@
 import 'package:flutter/material.dart';
 
+extension AppColorsExtension on AppColors {
+  /// Get success color for brightness
+  static Color success(Brightness brightness) {
+    return brightness == Brightness.light
+        ? AppColors.lightSuccess
+        : AppColors.darkSuccess;
+  }
+
+  /// Get warning color for brightness
+  static Color warning(Brightness brightness) {
+    return brightness == Brightness.light
+        ? AppColors.lightWarning
+        : AppColors.darkWarning;
+  }
+
+  /// Get info color for brightness
+  static Color info(Brightness brightness) {
+    return brightness == Brightness.light
+        ? AppColors.lightInfo
+        : AppColors.darkInfo;
+  }
+
+  /// Get destructive color for brightness
+  static Color destructive(Brightness brightness) {
+    return brightness == Brightness.light
+        ? AppColors.lightDestructive
+        : AppColors.darkDestructive;
+  }
+}
+
 /// Application color scheme following shadcn/ui design system
 class AppColors {
   // Private constructor to prevent instantiation
@@ -200,5 +230,24 @@ class AppColors {
       dark: darkMutedForeground,
       brightness: brightness,
     );
+  }
+
+  static Color success(Brightness brightness) {
+    return brightness == Brightness.light ? lightSuccess : darkSuccess;
+  }
+
+  /// Get warning color for brightness
+  static Color warning(Brightness brightness) {
+    return brightness == Brightness.light ? lightWarning : darkWarning;
+  }
+
+  /// Get info color for brightness
+  static Color info(Brightness brightness) {
+    return brightness == Brightness.light ? lightInfo : darkInfo;
+  }
+
+  /// Get destructive color for brightness
+  static Color destructive(Brightness brightness) {
+    return brightness == Brightness.light ? lightDestructive : darkDestructive;
   }
 }

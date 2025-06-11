@@ -185,6 +185,7 @@ class _TranslationInputState extends State<TranslationInput>
           scale: widget.isListening ? _pulseAnimation.value : 1.0,
           child: Container(
             decoration: BoxDecoration(
+              color: AppColors.background(brightness),
               borderRadius:
                   BorderRadius.circular(AppConstants.defaultBorderRadius),
               border: Border.all(
@@ -211,10 +212,10 @@ class _TranslationInputState extends State<TranslationInput>
                     color: AppColors.primary(brightness),
                   ),
                   decoration: InputDecoration(
-                    hintText: widget.placeholder ??
-                        'translation.enter_text_to_translate'.tr(),
+                    hintText:
+                        widget.placeholder ?? 'translation.enter_text'.tr(),
                     hintStyle: AppTextStyles.translationInput.copyWith(
-                      color: AppColors.mutedForeground(brightness),
+                      color: AppColors.border(brightness),
                     ),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,

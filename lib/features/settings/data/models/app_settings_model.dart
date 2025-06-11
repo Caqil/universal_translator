@@ -1,4 +1,4 @@
-// lib/core/settings/app_settings.dart
+// lib/features/settings/data/models/app_settings_model.dart
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
 
@@ -123,7 +123,7 @@ class AppSettings extends Equatable {
     this.crashReportingConsent = false,
   });
 
-  /// Copy with new values
+  /// Create a copy with modified values
   AppSettings copyWith({
     AppTheme? theme,
     String? language,
@@ -232,10 +232,16 @@ class AppSettings extends Equatable {
   String toString() => 'AppSettings(theme: $theme, language: $language)';
 }
 
+/// App theme enumeration with proper Hive annotations - FIXED
 @HiveType(typeId: 1)
 enum AppTheme {
+  @HiveField(0)
   light,
+
+  @HiveField(1)
   dark,
+
+  @HiveField(2)
   system;
 
   String get displayName {
@@ -250,10 +256,16 @@ enum AppTheme {
   }
 }
 
+/// Data usage mode enumeration with proper Hive annotations - FIXED
 @HiveType(typeId: 2)
 enum DataUsageMode {
+  @HiveField(0)
   low,
+
+  @HiveField(1)
   standard,
+
+  @HiveField(2)
   unlimited;
 
   String get displayName {

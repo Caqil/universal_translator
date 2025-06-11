@@ -193,7 +193,7 @@ class _TranslationViewState extends State<TranslationView>
         builder: (context, state) {
           if (state.status == TranslationStatus.loadingLanguages) {
             return CustomLoadingWidget.page(
-              message: 'loading.loading_languages'.tr(),
+              message: 'app.loading'.tr(),
             );
           }
 

@@ -134,7 +134,7 @@ class SettingsModel extends Equatable {
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
   final DateTime lastUpdated;
 
-  const SettingsModel({
+  SettingsModel({
     this.theme = AppTheme.system,
     this.language = 'en',
     this.autoTranslate = false,
@@ -164,14 +164,14 @@ class SettingsModel extends Equatable {
     this.translationCacheDuration = 24,
     this.analyticsConsent = false,
     this.crashReportingConsent = false,
-    required this.lastUpdated,
-  });
+    DateTime? lastUpdated,
+  }) : lastUpdated = lastUpdated ?? DateTime(2025, 1, 1);
 
-  /// Create from JSON
+  /// Factory constructor for JSON deserialization
   factory SettingsModel.fromJson(Map<String, dynamic> json) =>
       _$SettingsModelFromJson(json);
 
-  /// Convert to JSON
+  /// Method for JSON serialization
   Map<String, dynamic> toJson() => _$SettingsModelToJson(this);
 
   /// Convert to domain entity
@@ -210,49 +210,77 @@ class SettingsModel extends Equatable {
   }
 
   /// Create from domain entity
-  factory SettingsModel.fromEntity(AppSettings entity) {
+  factory SettingsModel.fromEntity(AppSettings settings) {
     return SettingsModel(
-      theme: entity.theme,
-      language: entity.language,
-      autoTranslate: entity.autoTranslate,
-      autoTranslateDelay: entity.autoTranslateDelay,
-      enableSpeechFeedback: entity.enableSpeechFeedback,
-      speechRate: entity.speechRate,
-      speechPitch: entity.speechPitch,
-      speechVolume: entity.speechVolume,
-      enableHapticFeedback: entity.enableHapticFeedback,
-      enableSoundEffects: entity.enableSoundEffects,
-      soundEffectsVolume: entity.soundEffectsVolume,
-      enableNotifications: entity.enableNotifications,
-      enablePushNotifications: entity.enablePushNotifications,
-      defaultSourceLanguage: entity.defaultSourceLanguage,
-      defaultTargetLanguage: entity.defaultTargetLanguage,
-      showTranslationConfidence: entity.showTranslationConfidence,
-      showAlternativeTranslations: entity.showAlternativeTranslations,
-      maxHistoryItems: entity.maxHistoryItems,
-      autoSaveTranslations: entity.autoSaveTranslations,
-      enableOfflineMode: entity.enableOfflineMode,
-      dataUsageMode: entity.dataUsageMode,
-      fontSizeMultiplier: entity.fontSizeMultiplier,
-      enableHighContrast: entity.enableHighContrast,
-      enableReduceMotion: entity.enableReduceMotion,
-      useCameraFlash: entity.useCameraFlash,
-      autoDetectLanguage: entity.autoDetectLanguage,
-      translationCacheDuration: entity.translationCacheDuration,
-      analyticsConsent: entity.analyticsConsent,
-      crashReportingConsent: entity.crashReportingConsent,
+      theme: settings.theme,
+      language: settings.language,
+      autoTranslate: settings.autoTranslate,
+      autoTranslateDelay: settings.autoTranslateDelay,
+      enableSpeechFeedback: settings.enableSpeechFeedback,
+      speechRate: settings.speechRate,
+      speechPitch: settings.speechPitch,
+      speechVolume: settings.speechVolume,
+      enableHapticFeedback: settings.enableHapticFeedback,
+      enableSoundEffects: settings.enableSoundEffects,
+      soundEffectsVolume: settings.soundEffectsVolume,
+      enableNotifications: settings.enableNotifications,
+      enablePushNotifications: settings.enablePushNotifications,
+      defaultSourceLanguage: settings.defaultSourceLanguage,
+      defaultTargetLanguage: settings.defaultTargetLanguage,
+      showTranslationConfidence: settings.showTranslationConfidence,
+      showAlternativeTranslations: settings.showAlternativeTranslations,
+      maxHistoryItems: settings.maxHistoryItems,
+      autoSaveTranslations: settings.autoSaveTranslations,
+      enableOfflineMode: settings.enableOfflineMode,
+      dataUsageMode: settings.dataUsageMode,
+      fontSizeMultiplier: settings.fontSizeMultiplier,
+      enableHighContrast: settings.enableHighContrast,
+      enableReduceMotion: settings.enableReduceMotion,
+      useCameraFlash: settings.useCameraFlash,
+      autoDetectLanguage: settings.autoDetectLanguage,
+      translationCacheDuration: settings.translationCacheDuration,
+      analyticsConsent: settings.analyticsConsent,
+      crashReportingConsent: settings.crashReportingConsent,
       lastUpdated: DateTime.now(),
     );
   }
 
-  /// Create default settings
-  factory SettingsModel.defaultSettings() {
+  /// Create default settings - FIXED STATIC METHOD
+  static SettingsModel defaultSettings() {
     return SettingsModel(
-      lastUpdated: DateTime.now(),
+      theme: AppTheme.system,
+      language: 'en',
+      autoTranslate: false,
+      autoTranslateDelay: 1000,
+      enableSpeechFeedback: true,
+      speechRate: 1.0,
+      speechPitch: 1.0,
+      speechVolume: 1.0,
+      enableHapticFeedback: true,
+      enableSoundEffects: true,
+      soundEffectsVolume: 0.5,
+      enableNotifications: true,
+      enablePushNotifications: false,
+      defaultSourceLanguage: 'en',
+      defaultTargetLanguage: 'es',
+      showTranslationConfidence: false,
+      showAlternativeTranslations: true,
+      maxHistoryItems: 1000,
+      autoSaveTranslations: true,
+      enableOfflineMode: false,
+      dataUsageMode: DataUsageMode.standard,
+      fontSizeMultiplier: 1.0,
+      enableHighContrast: false,
+      enableReduceMotion: false,
+      useCameraFlash: false,
+      autoDetectLanguage: true,
+      translationCacheDuration: 24,
+      analyticsConsent: false,
+      crashReportingConsent: false,
     );
   }
 
-  /// Copy with new values
+  /// Copy with method for creating modified instances
   SettingsModel copyWith({
     AppTheme? theme,
     String? language,

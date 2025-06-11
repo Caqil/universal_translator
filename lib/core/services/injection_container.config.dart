@@ -89,8 +89,6 @@ _i174.GetIt $initGetIt(
         gh<_i895.Connectivity>(),
         gh<_i973.InternetConnectionChecker>(),
       ));
-  gh.factory<_i723.SettingsMigrationHelper>(
-      () => _i723.SettingsMigrationHelper(gh<_i723.SettingsLocalDataSource>()));
   gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i723.SettingsLocalDataSource>()));
   gh.lazySingleton<_i683.TranslationRepository>(

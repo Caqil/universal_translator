@@ -46,7 +46,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       translationCacheDuration: fields[26] as int,
       analyticsConsent: fields[27] as bool,
       crashReportingConsent: fields[28] as bool,
-      lastUpdated: fields[29] as DateTime,
+      lastUpdated: fields[29] as DateTime?,
     );
   }
 

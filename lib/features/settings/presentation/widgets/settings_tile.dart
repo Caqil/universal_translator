@@ -385,13 +385,7 @@ class _SettingsTileState extends State<SettingsTile>
           value: widget.value ?? false,
           onChanged:
               widget.enabled ? (value) => widget.onChanged?.call(value) : null,
-          activeColor: brightness == Brightness.light
-              ? AppColors.lightAccent
-              : AppColors.darkAccent,
-          inactiveThumbColor: AppColors.mutedForeground(brightness),
-          inactiveTrackColor: brightness == Brightness.light
-              ? AppColors.lightSecondary
-              : AppColors.darkSecondary,
+          activeColor: AppColors.primary(brightness),
         );
 
       case SettingsTileType.navigation:

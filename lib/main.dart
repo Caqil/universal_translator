@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:translate_app/config/routes/app_router.dart';
+import 'package:translate_app/core/themes/app_colors.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_bloc.dart';
 import 'package:translate_app/features/translation/presentation/bloc/translation_event.dart';
 
@@ -14,6 +15,7 @@ import 'core/constants/app_constants.dart';
 import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
+import 'core/themes/app_theme.dart' as appTheme;
 import 'features/settings/data/models/app_settings_model.dart';
 
 /// Import for development utilities
@@ -32,10 +34,17 @@ void main() async {
 
   // Initialize system UI
   await _initializeSystemUI();
+
+  // Register Hive adapters before initializing Hive
   await _registerHiveAdapters();
+
   // Initialize Hive
   await _initializeHive();
+
+  // Initialize cache repair utility
   await CacheRepairUtility.repairAllCaches();
+
+  // Initialize dependency injection
   try {
     await init();
     debugPrint('✅ App initialization completed successfully');
@@ -75,47 +84,63 @@ void main() async {
   );
 }
 
+/// Register all Hive adapters
 Future<void> _registerHiveAdapters() async {
-  Hive.registerAdapter(SettingsModelAdapter());
-  Hive.registerAdapter(AppThemeAdapter());
-  Hive.registerAdapter(DataUsageModeAdapter());
-
-  print('✅ All Hive adapters registered successfully');
+  try {
+    // Only register if not already registered
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(SettingsModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(AppThemeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(DataUsageModeAdapter());
+    }
+    debugPrint('✅ All Hive adapters registered successfully');
+  } catch (e) {
+    debugPrint('❌ Failed to register Hive adapters: $e');
+  }
 }
 
 /// Initialize system UI configuration
 Future<void> _initializeSystemUI() async {
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    // Set preferred orientations
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
 
-  // Set system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
+    // Set system UI overlay style
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
 
-  // Enable edge-to-edge display
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-  );
+    // Enable edge-to-edge display
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
+    debugPrint('✅ System UI initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Failed to initialize system UI: $e');
+  }
 }
 
 /// Initialize Hive database
 Future<void> _initializeHive() async {
-  await Hive.initFlutter();
-
-  // Register adapters if needed
-  // Note: Add your Hive type adapters here when you create them
-  // Hive.registerAdapter(TranslationModelAdapter());
-  // Hive.registerAdapter(SettingsModelAdapter());
+  try {
+    await Hive.initFlutter();
+    debugPrint('✅ Hive initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Failed to initialize Hive: $e');
+  }
 }
 
 /// Main application widget
@@ -124,6 +149,7 @@ class TranslateApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ShadColorScheme.fromName('violet');
     return MultiBlocProvider(
       providers: [
         // Settings BLoC - Global
@@ -151,9 +177,16 @@ class TranslateApp extends StatelessWidget {
             // Localization
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
-            locale: context.locale,
+            locale: _getLocale(settings.language),
 
+            // Theme Configuration - FIXED
             themeMode: _getThemeMode(settings.theme),
+            theme: ShadThemeData(
+                brightness: Brightness.light, colorScheme: colorScheme),
+            darkTheme: ShadThemeData(
+              brightness: Brightness.dark,
+              colorScheme: colorScheme,
+            ),
 
             // Router Configuration
             routerConfig: appRouter,
@@ -161,10 +194,10 @@ class TranslateApp extends StatelessWidget {
             // App Metadata
             builder: (context, child) {
               return MediaQuery(
-                // Ensure text scaling doesn't break layout
+                // Apply font size settings - FIXED
                 data: MediaQuery.of(context).copyWith(
                   textScaler: TextScaler.linear(
-                    (settings.fontSizeMultiplier).clamp(0.8, 1.5),
+                    settings.fontSizeMultiplier.clamp(0.8, 2.0),
                   ),
                 ),
                 child: child ?? const SizedBox.shrink(),
@@ -176,9 +209,9 @@ class TranslateApp extends StatelessWidget {
     );
   }
 
-  /// Convert AppTheme enum to ThemeMode
-  ThemeMode? _getThemeMode(AppTheme appTheme) {
-    switch (appTheme) {
+  /// Convert AppTheme enum to ThemeMode - FIXED MISSING FUNCTION
+  ThemeMode _getThemeMode(AppTheme theme) {
+    switch (theme) {
       case AppTheme.light:
         return ThemeMode.light;
       case AppTheme.dark:
@@ -187,72 +220,40 @@ class TranslateApp extends StatelessWidget {
         return ThemeMode.system;
     }
   }
-}
 
-/// Custom error widget for better error display in debug mode
-class CustomErrorWidget extends StatelessWidget {
-  final FlutterErrorDetails errorDetails;
-
-  const CustomErrorWidget({
-    super.key,
-    required this.errorDetails,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.red.shade50,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 48,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Oops! Something went wrong',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                errorDetails.exception.toString(),
-                style: const TextStyle(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              if (kDebugMode) ...[
-                const Text(
-                  'Stack Trace (Debug Mode):',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      errorDetails.stack.toString(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
+  /// Get locale from language code - ADDED NEW FUNCTION
+  Locale _getLocale(String languageCode) {
+    switch (languageCode) {
+      case 'en':
+        return const Locale('en', 'US');
+      case 'es':
+        return const Locale('es', 'ES');
+      case 'fr':
+        return const Locale('fr', 'FR');
+      case 'de':
+        return const Locale('de', 'DE');
+      case 'zh':
+        return const Locale('zh', 'CN');
+      case 'ja':
+        return const Locale('ja', 'JP');
+      case 'ko':
+        return const Locale('ko', 'KR');
+      case 'ar':
+        return const Locale('ar', 'SA');
+      case 'pt':
+        return const Locale('pt', 'BR');
+      case 'ru':
+        return const Locale('ru', 'RU');
+      case 'it':
+        return const Locale('it', 'IT');
+      case 'nl':
+        return const Locale('nl', 'NL');
+      case 'tr':
+        return const Locale('tr', 'TR');
+      case 'hi':
+        return const Locale('hi', 'IN');
+      default:
+        return const Locale('en', 'US');
+    }
   }
 }

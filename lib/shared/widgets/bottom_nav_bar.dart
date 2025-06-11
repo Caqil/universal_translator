@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/themes/app_colors.dart';
@@ -48,13 +49,14 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
     final brightness = context.brightness;
     final effectiveBackgroundColor =
-        backgroundColor ?? AppColors.surface(brightness);
+        backgroundColor ?? theme.colorScheme.background;
     final effectiveSelectedColor =
-        selectedItemColor ?? AppColors.primary(brightness);
+        selectedItemColor ?? theme.colorScheme.primary;
     final effectiveUnselectedColor =
-        unselectedItemColor ?? AppColors.mutedForeground(brightness);
+        unselectedItemColor ?? theme.colorScheme.mutedForeground;
 
     final items = _buildNavigationItems(context);
 
@@ -112,12 +114,14 @@ class CustomBottomNavBar extends StatelessWidget {
             children: items.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
-              final isSelected = currentIndex == index;
+              final isSelected = currentIndex == index && currentIndex != -1;
+              final isCenterItem = index == 2; // Translate is the center item
 
               return Expanded(
                 child: _NavigationBarItem(
                   item: item,
                   isSelected: isSelected,
+                  isCenterItem: isCenterItem,
                   onTap: () => onTap(index),
                   selectedColor: selectedColor,
                   unselectedColor: unselectedColor,
@@ -139,7 +143,7 @@ class CustomBottomNavBar extends StatelessWidget {
     Color unselectedColor,
   ) {
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: currentIndex == -1 ? 0 : currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
       backgroundColor: backgroundColor,
@@ -156,7 +160,6 @@ class CustomBottomNavBar extends StatelessWidget {
                 activeIcon: Icon(item.activeIcon ?? item.icon,
                     size: AppConstants.iconSizeRegular),
                 label: item.label,
-                tooltip: item.tooltip,
               ))
           .toList(),
     );
@@ -165,34 +168,29 @@ class CustomBottomNavBar extends StatelessWidget {
   List<_NavigationItem> _buildNavigationItems(BuildContext context) {
     return [
       _NavigationItem(
+        icon: Iconsax.home,
+        activeIcon: Iconsax.home_15,
+        label: 'navigation.home'.tr(),
+      ),
+      _NavigationItem(
+        icon: Iconsax.search_normal,
+        activeIcon: Iconsax.search_normal_1,
+        label: 'navigation.search'.tr(),
+      ),
+      _NavigationItem(
         icon: Iconsax.translate,
         activeIcon: Iconsax.translate5,
-        label: 'navigation.nav_translate'.tr(),
-        tooltip: 'navigation.nav_translate_tooltip'.tr(),
-      ),
-      _NavigationItem(
-        icon: Iconsax.camera,
-        activeIcon: Iconsax.camera5,
-        label: 'navigation.nav_camera'.tr(),
-        tooltip: 'navigation.nav_camera_tooltip'.tr(),
-      ),
-      _NavigationItem(
-        icon: Iconsax.message,
-        activeIcon: Iconsax.message5,
-        label: 'navigation.nav_conversation'.tr(),
-        tooltip: 'navigation.nav_conversation_tooltip'.tr(),
+        label: 'navigation.translate'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.clock,
         activeIcon: Iconsax.clock5,
-        label: 'navigation.nav_history'.tr(),
-        tooltip: 'navigation.nav_history_tooltip'.tr(),
+        label: 'navigation.history'.tr(),
       ),
       _NavigationItem(
-        icon: Iconsax.heart,
-        activeIcon: Iconsax.heart5,
-        label: 'navigation.nav_favorites'.tr(),
-        tooltip: 'navigation.nav_favorites_tooltip'.tr(),
+        icon: Iconsax.profile_circle,
+        activeIcon: Iconsax.profile_circle5,
+        label: 'navigation.profile'.tr(),
       ),
     ];
   }
@@ -202,19 +200,18 @@ class _NavigationItem {
   final IconData icon;
   final IconData? activeIcon;
   final String label;
-  final String? tooltip;
 
   const _NavigationItem({
     required this.icon,
     this.activeIcon,
     required this.label,
-    this.tooltip,
   });
 }
 
 class _NavigationBarItem extends StatelessWidget {
   final _NavigationItem item;
   final bool isSelected;
+  final bool isCenterItem;
   final VoidCallback onTap;
   final Color selectedColor;
   final Color unselectedColor;
@@ -223,6 +220,7 @@ class _NavigationBarItem extends StatelessWidget {
   const _NavigationBarItem({
     required this.item,
     required this.isSelected,
+    required this.isCenterItem,
     required this.onTap,
     required this.selectedColor,
     required this.unselectedColor,
@@ -237,34 +235,43 @@ class _NavigationBarItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.smallPadding,
-          vertical: AppConstants.smallPadding,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: AppConstants.fastAnimationDuration,
-              padding: const EdgeInsets.all(AppConstants.smallPadding),
+              padding: EdgeInsets.all(
+                isCenterItem
+                    ? AppConstants.defaultPadding
+                    : AppConstants.smallPadding,
+              ),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? selectedColor.withOpacity(0.1)
+                    ? selectedColor.withOpacity(isCenterItem ? 0.15 : 0.1)
                     : Colors.transparent,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.largeBorderRadius),
+                borderRadius: BorderRadius.circular(
+                  isCenterItem
+                      ? AppConstants.largeBorderRadius
+                      : AppConstants.largeBorderRadius,
+                ),
               ),
               child: Icon(
                 isSelected ? (item.activeIcon ?? item.icon) : item.icon,
                 color: isSelected ? selectedColor : unselectedColor,
-                size: AppConstants.iconSizeRegular,
+                size: isCenterItem
+                    ? AppConstants.iconSizeLarge
+                    : AppConstants.iconSizeRegular,
               ),
             ),
             if (showLabel) ...[
-              const SizedBox(height: AppConstants.smallPadding / 2),
+              SizedBox(height: AppConstants.smallPadding / 2),
               Text(
                 item.label,
                 style: AppTextStyles.labelSmall.copyWith(
                   color: isSelected ? selectedColor : unselectedColor,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontSize: isCenterItem ? 11 : 10,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,

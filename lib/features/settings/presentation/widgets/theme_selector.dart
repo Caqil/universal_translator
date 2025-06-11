@@ -385,11 +385,11 @@ class _ThemeSelectorState extends State<ThemeSelector>
   String _getThemeDescription(AppTheme theme) {
     switch (theme) {
       case AppTheme.light:
-        return 'light_theme_description'.tr();
+        return 'settings.light_theme_description'.tr();
       case AppTheme.dark:
-        return 'dark_theme_description'.tr();
+        return 'settings.dark_theme_description'.tr();
       case AppTheme.system:
-        return 'system_theme_description'.tr();
+        return 'settings.system_theme_description'.tr();
     }
   }
 }

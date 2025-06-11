@@ -1,7 +1,9 @@
+// lib/features/settings/data/datasources/settings_local_datasource.dart
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
+import '../models/app_settings_model.dart';
 import '../models/settings_model.dart';
 
 /// Abstract interface for settings local data source
@@ -53,35 +55,51 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<SettingsModel> getSettings() async {
     try {
-      final data = _settingsBox.get(_settingsKey);
-
-      if (data == null) {
+      // Check if we have settings in the box
+      if (!_settingsBox.containsKey(_settingsKey)) {
         // Return default settings if none exist
         final defaultSettings = SettingsModel.defaultSettings();
         await saveSettings(defaultSettings);
         return defaultSettings;
       }
 
-      // Handle different data types
+      final data = _settingsBox.get(_settingsKey);
+
+      // Handle different data types for backward compatibility
       if (data is SettingsModel) {
         return data;
-      } else if (data is Map<String, dynamic>) {
-        return SettingsModel.fromJson(data);
+      } else if (data is Map) {
+        // Convert Map to proper format
+        final Map<String, dynamic> jsonData = Map<String, dynamic>.from(data);
+        return SettingsModel.fromJson(jsonData);
       } else {
-        throw CacheException.readError('Invalid settings data format');
+        // Fallback to default if data is corrupted
+        print('⚠️ Settings data corrupted, using defaults');
+        final defaultSettings = SettingsModel.defaultSettings();
+        await saveSettings(defaultSettings);
+        return defaultSettings;
       }
     } catch (e) {
-      if (e is CacheException) rethrow;
-      throw CacheException.readError('Failed to get settings: $e');
+      print('❌ Error getting settings: $e');
+      // Return default settings on any error
+      final defaultSettings = SettingsModel.defaultSettings();
+      try {
+        await saveSettings(defaultSettings);
+      } catch (saveError) {
+        print('❌ Error saving default settings: $saveError');
+      }
+      return defaultSettings;
     }
   }
 
   @override
   Future<void> saveSettings(SettingsModel settings) async {
     try {
+      // Save as SettingsModel object (Hive will serialize it)
       await _settingsBox.put(_settingsKey, settings);
-      await setSettingsVersion(_currentVersion);
+      print('✅ Settings saved successfully');
     } catch (e) {
+      print('❌ Error saving settings: $e');
       throw CacheException.writeError('Failed to save settings: $e');
     }
   }
@@ -89,10 +107,16 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<void> resetSettings() async {
     try {
+      // Delete current settings
+      await _settingsBox.delete(_settingsKey);
+
+      // Save default settings
       final defaultSettings = SettingsModel.defaultSettings();
-      await _settingsBox.put(_settingsKey, defaultSettings);
-      await setSettingsVersion(_currentVersion);
+      await saveSettings(defaultSettings);
+
+      print('✅ Settings reset to defaults');
     } catch (e) {
+      print('❌ Error resetting settings: $e');
       throw CacheException.writeError('Failed to reset settings: $e');
     }
   }
@@ -102,24 +126,200 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
     try {
       final settings = await getSettings();
       final settingsJson = settings.toJson();
-      return settingsJson[key] as T?;
+
+      if (settingsJson.containsKey(key)) {
+        final value = settingsJson[key];
+        if (value is T) {
+          return value;
+        }
+      }
+      return null;
     } catch (e) {
-      throw CacheException.readError('Failed to get setting $key: $e');
+      print('❌ Error getting setting $key: $e');
+      return null;
     }
   }
 
   @override
   Future<void> saveSetting<T>(String key, T value) async {
     try {
+      // Get current settings
       final currentSettings = await getSettings();
-      final settingsJson = currentSettings.toJson();
-      settingsJson[key] = value;
 
-      final updatedSettings = SettingsModel.fromJson(settingsJson);
+      // Update the specific setting
+      final updatedSettings = _updateSetting(currentSettings, key, value);
+
+      // Save updated settings
       await saveSettings(updatedSettings);
+
+      print('✅ Setting $key updated successfully');
     } catch (e) {
+      print('❌ Error saving setting $key: $e');
       throw CacheException.writeError('Failed to save setting $key: $e');
     }
+  }
+
+  /// Helper method to update a specific setting
+  SettingsModel _updateSetting<T>(SettingsModel settings, String key, T value) {
+    switch (key) {
+      case 'theme':
+        if (value is String) {
+          final theme = AppTheme.values.firstWhere(
+            (e) => e.name == value,
+            orElse: () => AppTheme.system,
+          );
+          return settings.copyWith(theme: theme);
+        }
+        break;
+      case 'language':
+        if (value is String) {
+          return settings.copyWith(language: value);
+        }
+        break;
+      case 'autoTranslate':
+        if (value is bool) {
+          return settings.copyWith(autoTranslate: value);
+        }
+        break;
+      case 'autoTranslateDelay':
+        if (value is int) {
+          return settings.copyWith(autoTranslateDelay: value);
+        }
+        break;
+      case 'enableSpeechFeedback':
+        if (value is bool) {
+          return settings.copyWith(enableSpeechFeedback: value);
+        }
+        break;
+      case 'speechRate':
+        if (value is double) {
+          return settings.copyWith(speechRate: value);
+        }
+        break;
+      case 'speechPitch':
+        if (value is double) {
+          return settings.copyWith(speechPitch: value);
+        }
+        break;
+      case 'speechVolume':
+        if (value is double) {
+          return settings.copyWith(speechVolume: value);
+        }
+        break;
+      case 'enableHapticFeedback':
+        if (value is bool) {
+          return settings.copyWith(enableHapticFeedback: value);
+        }
+        break;
+      case 'enableSoundEffects':
+        if (value is bool) {
+          return settings.copyWith(enableSoundEffects: value);
+        }
+        break;
+      case 'soundEffectsVolume':
+        if (value is double) {
+          return settings.copyWith(soundEffectsVolume: value);
+        }
+        break;
+      case 'enableNotifications':
+        if (value is bool) {
+          return settings.copyWith(enableNotifications: value);
+        }
+        break;
+      case 'enablePushNotifications':
+        if (value is bool) {
+          return settings.copyWith(enablePushNotifications: value);
+        }
+        break;
+      case 'defaultSourceLanguage':
+        if (value is String) {
+          return settings.copyWith(defaultSourceLanguage: value);
+        }
+        break;
+      case 'defaultTargetLanguage':
+        if (value is String) {
+          return settings.copyWith(defaultTargetLanguage: value);
+        }
+        break;
+      case 'showTranslationConfidence':
+        if (value is bool) {
+          return settings.copyWith(showTranslationConfidence: value);
+        }
+        break;
+      case 'showAlternativeTranslations':
+        if (value is bool) {
+          return settings.copyWith(showAlternativeTranslations: value);
+        }
+        break;
+      case 'maxHistoryItems':
+        if (value is int) {
+          return settings.copyWith(maxHistoryItems: value);
+        }
+        break;
+      case 'autoSaveTranslations':
+        if (value is bool) {
+          return settings.copyWith(autoSaveTranslations: value);
+        }
+        break;
+      case 'enableOfflineMode':
+        if (value is bool) {
+          return settings.copyWith(enableOfflineMode: value);
+        }
+        break;
+      case 'dataUsageMode':
+        if (value is String) {
+          final mode = DataUsageMode.values.firstWhere(
+            (e) => e.name == value,
+            orElse: () => DataUsageMode.standard,
+          );
+          return settings.copyWith(dataUsageMode: mode);
+        }
+        break;
+      case 'fontSizeMultiplier':
+        if (value is double) {
+          return settings.copyWith(fontSizeMultiplier: value.clamp(0.8, 2.0));
+        }
+        break;
+      case 'enableHighContrast':
+        if (value is bool) {
+          return settings.copyWith(enableHighContrast: value);
+        }
+        break;
+      case 'enableReduceMotion':
+        if (value is bool) {
+          return settings.copyWith(enableReduceMotion: value);
+        }
+        break;
+      case 'useCameraFlash':
+        if (value is bool) {
+          return settings.copyWith(useCameraFlash: value);
+        }
+        break;
+      case 'autoDetectLanguage':
+        if (value is bool) {
+          return settings.copyWith(autoDetectLanguage: value);
+        }
+        break;
+      case 'translationCacheDuration':
+        if (value is int) {
+          return settings.copyWith(translationCacheDuration: value);
+        }
+        break;
+      case 'analyticsConsent':
+        if (value is bool) {
+          return settings.copyWith(analyticsConsent: value);
+        }
+        break;
+      case 'crashReportingConsent':
+        if (value is bool) {
+          return settings.copyWith(crashReportingConsent: value);
+        }
+        break;
+    }
+
+    // Return original settings if key not found
+    print('⚠️ Unknown setting key: $key');
+    return settings;
   }
 
   @override
@@ -127,7 +327,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
     try {
       return _settingsBox.containsKey(_settingsKey);
     } catch (e) {
-      throw CacheException.readError('Failed to check settings existence: $e');
+      print('❌ Error checking settings existence: $e');
+      return false;
     }
   }
 
@@ -135,12 +336,9 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   Future<Map<String, dynamic>> exportSettings() async {
     try {
       final settings = await getSettings();
-      return {
-        'settings': settings.toJson(),
-        'version': _currentVersion,
-        'exportedAt': DateTime.now().toIso8601String(),
-      };
+      return settings.toJson();
     } catch (e) {
+      print('❌ Error exporting settings: $e');
       throw CacheException.readError('Failed to export settings: $e');
     }
   }
@@ -148,15 +346,11 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<void> importSettings(Map<String, dynamic> settingsJson) async {
     try {
-      final settingsData = settingsJson['settings'] as Map<String, dynamic>?;
-      if (settingsData == null) {
-        throw CacheException.readError('Invalid settings format for import');
-      }
-
-      final importedSettings = SettingsModel.fromJson(settingsData);
-      await saveSettings(importedSettings);
+      final settings = SettingsModel.fromJson(settingsJson);
+      await saveSettings(settings);
+      print('✅ Settings imported successfully');
     } catch (e) {
-      if (e is CacheException) rethrow;
+      print('❌ Error importing settings: $e');
       throw CacheException.writeError('Failed to import settings: $e');
     }
   }
@@ -164,9 +358,10 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<int> getSettingsVersion() async {
     try {
-      return _settingsBox.get(_versionKey, defaultValue: 0) as int;
+      return _settingsBox.get(_versionKey, defaultValue: _currentVersion);
     } catch (e) {
-      throw CacheException.readError('Failed to get settings version: $e');
+      print('❌ Error getting settings version: $e');
+      return _currentVersion;
     }
   }
 
@@ -175,42 +370,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
     try {
       await _settingsBox.put(_versionKey, version);
     } catch (e) {
+      print('❌ Error setting settings version: $e');
       throw CacheException.writeError('Failed to set settings version: $e');
     }
-  }
-}
-
-/// Settings migration helper
-@injectable
-class SettingsMigrationHelper {
-  final SettingsLocalDataSource _dataSource;
-
-  SettingsMigrationHelper(this._dataSource);
-
-  /// Migrate settings if needed
-  Future<void> migrateIfNeeded() async {
-    try {
-      final currentVersion = await _dataSource.getSettingsVersion();
-      const targetVersion = SettingsLocalDataSourceImpl._currentVersion;
-
-      if (currentVersion < targetVersion) {
-        await _performMigration(currentVersion, targetVersion);
-        await _dataSource.setSettingsVersion(targetVersion);
-      }
-    } catch (e) {
-      throw CacheException.readError('Settings migration failed: $e');
-    }
-  }
-
-  /// Perform migration between versions
-  Future<void> _performMigration(int fromVersion, int toVersion) async {
-    // Migration logic for future versions
-    // Example:
-    // if (fromVersion < 1) {
-    //   await _migrateToV1();
-    // }
-    // if (fromVersion < 2) {
-    //   await _migrateToV2();
-    // }
   }
 }
