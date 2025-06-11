@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
@@ -11,7 +10,6 @@ import '../datasources/translation_local_datasource.dart';
 import '../datasources/translation_remote_datasource.dart';
 
 /// Implementation of translation repository
-@LazySingleton(as: TranslationRepository)
 class TranslationRepositoryImpl implements TranslationRepository {
   final TranslationRemoteDataSource _remoteDataSource;
   final TranslationLocalDataSource _localDataSource;

@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -45,18 +44,13 @@ abstract class TranslationLocalDataSource {
   Future<void> saveRecentLanguage(String languageCode);
 }
 
-/// Implementation of translation local data source using Hive
-@LazySingleton(as: TranslationLocalDataSource)
 class TranslationLocalDataSourceImpl implements TranslationLocalDataSource {
   final Box _translationsBox;
   final Box _languagesBox;
   final Box _settingsBox;
 
   TranslationLocalDataSourceImpl(
-    @Named('translationsBox') this._translationsBox,
-    @Named('languagesBox') this._languagesBox,
-    @Named('settingsBox') this._settingsBox,
-  );
+      this._translationsBox, this._languagesBox, this._settingsBox);
 
   @override
   Future<void> cacheTranslation(TranslationModel translation) async {

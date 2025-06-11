@@ -1,7 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:injectable/injectable.dart';
-
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/app_utils.dart';
 import '../../domain/usecases/detect_language.dart';
 import '../../domain/usecases/get_supported_languages.dart';
@@ -9,7 +6,6 @@ import '../../domain/usecases/translate_text.dart';
 import 'translation_event.dart';
 import 'translation_state.dart';
 
-@injectable
 class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
   final TranslateText _translateText;
   final DetectLanguage _detectLanguage;

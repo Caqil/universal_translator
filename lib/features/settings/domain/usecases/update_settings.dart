@@ -1,14 +1,10 @@
 // lib/features/settings/domain/usecases/update_settings.dart
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
-
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../data/models/app_settings_model.dart';
 import '../repositories/settings_repository.dart';
 
-/// Use case for updating application settings
-@injectable
 class UpdateSettings implements UseCase<void, UpdateSettingsParams> {
   final SettingsRepository _repository;
 
@@ -20,8 +16,6 @@ class UpdateSettings implements UseCase<void, UpdateSettingsParams> {
   }
 }
 
-/// Use case for updating a specific setting
-@injectable
 class UpdateSetting<T> implements UseCase<void, UpdateSettingParams<T>> {
   final SettingsRepository _repository;
 
@@ -33,8 +27,6 @@ class UpdateSetting<T> implements UseCase<void, UpdateSettingParams<T>> {
   }
 }
 
-/// Use case for resetting settings to default
-@injectable
 class ResetSettings implements NoParamsUseCase<void> {
   final SettingsRepository _repository;
 
@@ -46,8 +38,6 @@ class ResetSettings implements NoParamsUseCase<void> {
   }
 }
 
-/// Use case for importing settings from backup
-@injectable
 class ImportSettings implements UseCase<void, ImportSettingsParams> {
   final SettingsRepository _repository;
 
@@ -59,8 +49,6 @@ class ImportSettings implements UseCase<void, ImportSettingsParams> {
   }
 }
 
-/// Use case for updating theme
-@injectable
 class UpdateTheme implements UseCase<void, UpdateThemeParams> {
   final SettingsRepository _repository;
 
@@ -72,8 +60,6 @@ class UpdateTheme implements UseCase<void, UpdateThemeParams> {
   }
 }
 
-/// Use case for updating language
-@injectable
 class UpdateLanguage implements UseCase<void, UpdateLanguageParams> {
   final SettingsRepository _repository;
 

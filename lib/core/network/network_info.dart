@@ -1,6 +1,6 @@
+// lib/core/network/network_info.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:injectable/injectable.dart';
 
 /// Abstract class for network connectivity information
 abstract class NetworkInfo {
@@ -11,7 +11,6 @@ abstract class NetworkInfo {
 }
 
 /// Implementation of NetworkInfo using connectivity_plus and internet_connection_checker
-@LazySingleton(as: NetworkInfo)
 class NetworkInfoImpl implements NetworkInfo {
   final Connectivity _connectivity;
   final InternetConnectionChecker _internetChecker;
@@ -142,15 +141,4 @@ class NetworkStatus {
   String toString() {
     return 'NetworkStatus(connectivity: $connectivityResults, hasInternet: $hasInternetAccess, isConnected: $isConnected)';
   }
-}
-
-/// Factory for creating NetworkInfo dependencies
-@module
-abstract class NetworkModule {
-  @lazySingleton
-  Connectivity get connectivity => Connectivity();
-
-  @lazySingleton
-  InternetConnectionChecker get internetConnectionChecker =>
-      InternetConnectionChecker.createInstance();
 }

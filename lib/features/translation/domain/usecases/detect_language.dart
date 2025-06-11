@@ -1,15 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:injectable/injectable.dart';
-
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/validators.dart';
 import '../repositories/translation_repository.dart';
 
-/// Use case for detecting language of text
-@injectable
 class DetectLanguage implements UseCase<String, DetectLanguageParams> {
   final TranslationRepository _repository;
 

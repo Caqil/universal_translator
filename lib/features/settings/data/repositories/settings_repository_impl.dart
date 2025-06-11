@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
-
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/repositories/settings_repository.dart';
@@ -10,8 +8,6 @@ import '../datasources/settings_local_datasource.dart';
 import '../models/app_settings_model.dart';
 import '../models/settings_model.dart';
 
-/// Implementation of settings repository
-@LazySingleton(as: SettingsRepository)
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDataSource _localDataSource;
   final StreamController<AppSettings> _settingsController;

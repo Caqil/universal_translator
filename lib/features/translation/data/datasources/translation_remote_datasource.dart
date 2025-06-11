@@ -1,7 +1,5 @@
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
-import '../../../../core/constants/language_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/app_utils.dart';
@@ -32,7 +30,6 @@ abstract class TranslationRemoteDataSource {
   });
 }
 
-@LazySingleton(as: TranslationRemoteDataSource)
 class TranslationRemoteDataSourceImpl implements TranslationRemoteDataSource {
   final DioClient _dioClient;
 

@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../models/settings_model.dart';
@@ -37,8 +36,6 @@ abstract class SettingsLocalDataSource {
   Future<void> setSettingsVersion(int version);
 }
 
-/// Implementation of settings local data source using Hive
-@LazySingleton(as: SettingsLocalDataSource)
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   final Box _settingsBox;
 
@@ -47,7 +44,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   static const int _currentVersion = 1;
 
   SettingsLocalDataSourceImpl(
-    @Named('settingsBox') this._settingsBox,
+    this._settingsBox,
   );
 
   @override
@@ -180,8 +177,6 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   }
 }
 
-/// Settings migration helper
-@injectable
 class SettingsMigrationHelper {
   final SettingsLocalDataSource _dataSource;
 

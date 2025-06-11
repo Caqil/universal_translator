@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/language_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -9,8 +8,6 @@ import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/validators.dart';
 import '../repositories/speech_repository.dart';
 
-/// Use case for text-to-speech
-@injectable
 class TextToSpeech implements UseCase<void, TextToSpeechParams> {
   final SpeechRepository _repository;
 

@@ -1,9 +1,7 @@
-import 'package:injectable/injectable.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../core/constants/language_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/speech_result_model.dart';
 
@@ -66,8 +64,6 @@ abstract class SpeechDataSource {
   bool get isSpeaking;
 }
 
-/// Implementation of speech data source
-@LazySingleton(as: SpeechDataSource)
 class SpeechDataSourceImpl implements SpeechDataSource {
   final stt.SpeechToText _speechToText;
   final FlutterTts _flutterTts;

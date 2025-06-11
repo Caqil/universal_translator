@@ -1,14 +1,11 @@
 
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../data/models/app_settings_model.dart';
 import '../repositories/settings_repository.dart';
 
-/// Use case for getting application settings
-@injectable
 class GetSettings implements NoParamsUseCase<AppSettings> {
   final SettingsRepository _repository;
 
@@ -20,8 +17,6 @@ class GetSettings implements NoParamsUseCase<AppSettings> {
   }
 }
 
-/// Use case for getting a specific setting value
-@injectable
 class GetSetting<T> implements UseCase<T?, GetSettingParams> {
   final SettingsRepository _repository;
 
@@ -33,8 +28,6 @@ class GetSetting<T> implements UseCase<T?, GetSettingParams> {
   }
 }
 
-/// Use case for checking if settings exist
-@injectable
 class HasSettings implements NoParamsUseCase<bool> {
   final SettingsRepository _repository;
 
@@ -46,8 +39,6 @@ class HasSettings implements NoParamsUseCase<bool> {
   }
 }
 
-/// Use case for watching settings changes
-@injectable
 class WatchSettings implements NoParamsUseCase<Stream<AppSettings>> {
   final SettingsRepository _repository;
 
@@ -72,8 +63,6 @@ class WatchSettings implements NoParamsUseCase<Stream<AppSettings>> {
   }
 }
 
-/// Use case for exporting settings
-@injectable
 class ExportSettings implements NoParamsUseCase<Map<String, dynamic>> {
   final SettingsRepository _repository;
 

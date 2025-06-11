@@ -5,7 +5,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:translate_app/core/utils/extensions.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/services/service_locator.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/app_text_styles.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
@@ -24,11 +23,7 @@ class TranslationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ServiceLocator.get<TranslationBloc>()
-        ..add(const LoadSupportedLanguagesEvent()),
-      child: const TranslationView(),
-    );
+    return TranslationView();
   }
 }
 
@@ -48,6 +43,7 @@ class _TranslationViewState extends State<TranslationView>
   @override
   void initState() {
     super.initState();
+    context.read<TranslationBloc>().add(const LoadSupportedLanguagesEvent());
     _inputController = TextEditingController();
     _swapAnimationController = AnimationController(
       duration: AppConstants.defaultAnimationDuration,

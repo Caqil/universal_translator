@@ -2,7 +2,6 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../data/models/app_settings_model.dart';
 import '../../domain/usecases/get_settings.dart';
@@ -10,8 +9,6 @@ import '../../domain/usecases/update_settings.dart';
 import 'settings_event.dart';
 import 'settings_state.dart';
 
-/// BLoC for managing application settings
-@injectable
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final GetSettings _getSettings;
   final UpdateSettings _updateSettings;

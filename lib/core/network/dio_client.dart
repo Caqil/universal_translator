@@ -1,9 +1,8 @@
+// lib/core/network/dio_client.dart
 import 'package:dio/dio.dart';
-import 'package:injectable/injectable.dart';
 import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
 
-@LazySingleton()
 class DioClient {
   final Dio _dio;
   String? _apiKey;
@@ -83,6 +82,48 @@ class DioClient {
       }
 
       return await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// PUT request
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// DELETE request
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.delete<T>(
         path,
         data: data,
         queryParameters: queryParameters,

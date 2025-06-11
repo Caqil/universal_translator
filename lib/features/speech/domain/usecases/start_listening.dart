@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/language_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -10,8 +9,6 @@ import '../../../../core/utils/validators.dart';
 import '../entities/speech_result.dart';
 import '../repositories/speech_repository.dart';
 
-/// Use case for starting speech recognition
-@injectable
 class StartListening
     implements StreamUseCase<SpeechResult, StartListeningParams> {
   final SpeechRepository _repository;
