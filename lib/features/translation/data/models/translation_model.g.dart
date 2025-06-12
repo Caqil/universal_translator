@@ -21,6 +21,7 @@ TranslationModel _$TranslationModelFromJson(Map<String, dynamic> json) =>
           ?.map((e) => e as String)
           .toList(),
       detectedLanguage: json['detectedLanguage'] as String?,
+      isOffline: json['isOffline'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TranslationModelToJson(TranslationModel instance) =>
@@ -30,6 +31,7 @@ Map<String, dynamic> _$TranslationModelToJson(TranslationModel instance) =>
       'translatedText': instance.translatedText,
       'sourceLanguage': instance.sourceLanguage,
       'targetLanguage': instance.targetLanguage,
+      'isOffline': instance.isOffline,
       'timestamp': TranslationModel._dateTimeToJson(instance.timestamp),
       'isFavorite': instance.isFavorite,
       'confidence': instance.confidence,
