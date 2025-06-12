@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -166,17 +167,9 @@ class _OnboardingPageState extends State<OnboardingPage>
   /// Show permission granted message
   void _showPermissionGrantedMessage(String permission) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Iconsax.tick_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text('$permission granted!'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
+    ShadToaster.of(context).show(
+      ShadToast(
+        description: Text('$permission granted!'),
       ),
     );
   }
@@ -184,17 +177,9 @@ class _OnboardingPageState extends State<OnboardingPage>
   /// Show permission denied message
   void _showPermissionDeniedMessage(String permission) {
     HapticFeedback.heavyImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Iconsax.close_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text('$permission access denied'),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
+    ShadToaster.of(context).show(
+      ShadToast(
+        description: Text('$permission access denied!'),
       ),
     );
   }

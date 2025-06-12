@@ -470,17 +470,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
   /// Show permission granted success message
   void _showPermissionGrantedMessage() {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Iconsax.tick_circle),
-            const SizedBox(width: 8),
-            Text('Microphone permission granted!'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
+    ShadToaster.of(context).show(
+      ShadToast(
+        description: Text('Microphone permission granted!'),
       ),
     );
   }
@@ -520,26 +512,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     print('🎤 ERROR: $error');
 
     HapticFeedback.heavyImpact();
-
-    // Show user-friendly error messages
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Iconsax.close_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(error)),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-        action: error.contains('permission')
-            ? SnackBarAction(
-                label: 'Settings',
-                textColor: Colors.white,
-                onPressed: () => PermissionService.openAppSettings(),
-              )
-            : null,
+    ShadToaster.of(context).show(
+      ShadToast(
+        description: Text(error),
       ),
     );
 

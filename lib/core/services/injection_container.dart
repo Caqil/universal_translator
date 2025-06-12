@@ -1,4 +1,4 @@
-// lib/core/services/injection_container.dart - FIXED VERSION
+
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,9 +7,8 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart'; 
 
-import '../../features/conversation/data/models/conversation_model.dart';
-import '../../features/conversation/data/models/message_model.dart';
 import '../constants/app_constants.dart';
 import '../../features/history/data/models/history_item_model.dart';
 import 'injection_container.config.dart';
@@ -60,6 +59,12 @@ Future<void> init() async {
 /// Register ONLY dependencies that can't use @injectable (async initialization required)
 Future<void> _registerManualDependencies() async {
   try {
+    // Uuid - Must be registered manually (needed by ConversationRepositoryImpl)
+    if (!sl.isRegistered<Uuid>()) {
+      sl.registerLazySingleton<Uuid>(() => const Uuid());
+      debugPrint('✅ Uuid registered');
+    }
+
     // SharedPreferences - Must be registered manually (async initialization)
     if (!sl.isRegistered<SharedPreferences>()) {
       final sharedPreferences = await SharedPreferences.getInstance()
@@ -137,8 +142,7 @@ Future<void> _initializeHiveBoxes() async {
       );
       debugPrint('✅ Settings box registered');
     }
-
-    // History Box - **FIXED: Register with correct type**
+    // History Box (Typed)
     if (!sl.isRegistered<Box<HistoryItemModel>>(instanceName: 'historyBox')) {
       final historyBox =
           await Hive.openBox<HistoryItemModel>(AppConstants.historyBoxName)
@@ -147,44 +151,12 @@ Future<void> _initializeHiveBoxes() async {
         () => historyBox,
         instanceName: 'historyBox',
       );
-      debugPrint('✅ History box registered with correct type');
+      debugPrint('✅ History box registered');
     }
-    // Conversation boxes (new)
-    final conversationsBox =
-        await Hive.openBox<ConversationModel>('conversations');
-    sl.registerSingleton<Box<ConversationModel>>(conversationsBox,
-        instanceName: 'conversationsBox');
 
-    final messagesBox = await Hive.openBox<MessageModel>('messages');
-    sl.registerSingleton<Box<MessageModel>>(messagesBox,
-        instanceName: 'messagesBox');
+    debugPrint('✅ All Hive boxes initialized successfully');
   } catch (e) {
     debugPrint('❌ Hive boxes initialization failed: $e');
-    rethrow;
-  }
-}
-
-/// Reset all dependencies (useful for testing)
-Future<void> reset() async {
-  try {
-    await sl.reset();
-    debugPrint('✅ Dependencies reset successfully');
-  } catch (e) {
-    debugPrint('❌ Dependencies reset failed: $e');
-  }
-}
-
-/// Check if a dependency is registered
-bool isRegistered<T extends Object>({String? instanceName}) {
-  return sl.isRegistered<T>(instanceName: instanceName);
-}
-
-/// Get dependency instance with error handling
-T get<T extends Object>({String? instanceName}) {
-  try {
-    return sl.get<T>(instanceName: instanceName);
-  } catch (e) {
-    debugPrint('❌ Failed to get dependency ${T.toString()}: $e');
     rethrow;
   }
 }

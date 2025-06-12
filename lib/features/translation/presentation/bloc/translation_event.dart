@@ -83,3 +83,33 @@ class SetSourceTextEvent extends TranslationEvent {
   @override
   List<Object?> get props => [text];
 }
+
+/// Event to toggle favorite status of current translation
+class ToggleFavoriteEvent extends TranslationEvent {
+  final String translationId;
+
+  const ToggleFavoriteEvent(this.translationId);
+
+  @override
+  List<Object?> get props => [translationId];
+}
+
+/// Event to load translation by ID (useful for favorites)
+class LoadTranslationEvent extends TranslationEvent {
+  final String translationId;
+
+  const LoadTranslationEvent(this.translationId);
+
+  @override
+  List<Object?> get props => [translationId];
+}
+
+/// Event to save current translation to history/favorites
+class SaveCurrentTranslationEvent extends TranslationEvent {
+  final bool asFavorite;
+
+  const SaveCurrentTranslationEvent({this.asFavorite = false});
+
+  @override
+  List<Object?> get props => [asFavorite];
+}

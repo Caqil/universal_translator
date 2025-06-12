@@ -22,6 +22,7 @@ class TranslationModel extends Equatable {
 
   /// Target language code
   final String targetLanguage;
+  final bool isOffline;
 
   /// When the translation was created
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
@@ -50,6 +51,7 @@ class TranslationModel extends Equatable {
     this.confidence,
     this.alternatives,
     this.detectedLanguage,
+    this.isOffline = false,
   });
 
   /// Create from JSON
@@ -72,6 +74,7 @@ class TranslationModel extends Equatable {
       confidence: confidence,
       alternatives: alternatives,
       detectedLanguage: detectedLanguage,
+      isOffline: isOffline,
     );
   }
 

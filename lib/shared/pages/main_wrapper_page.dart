@@ -28,7 +28,7 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
   final List<Widget> _pages = [
     const TranslationPage(),
     const CameraPage(),
-    const ConversationPage(),
+    const CameraPage(),
     // In your navigation/routing, only create HistoryBloc when the page is actually accessed
     BlocProvider(
       create: (context) {
@@ -65,27 +65,11 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
-        onTap: (i) {
-          if (i == 2) {
-            _showQuickActions(context);
-          } else {
-            _onTabTapped(i);
-          }
-        },
+        onTap: _onTabTapped,
         backgroundColor: AppColors.surface(brightness),
         selectedItemColor: AppColors.primary(brightness),
         unselectedItemColor: AppColors.mutedForeground(brightness),
       ),
-    );
-  }
-
-  /// Show quick actions bottom sheet
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => QuickActionsBottomSheet(),
     );
   }
 }

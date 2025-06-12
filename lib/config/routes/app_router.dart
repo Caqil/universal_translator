@@ -1,8 +1,7 @@
-// lib/core/routes/app_router.dart
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
@@ -64,13 +63,6 @@ final GoRouter appRouter = GoRouter(
         //   name: 'camera',
         //   builder: (context, state) => const CameraPage(),
         // ),
-
-        // Conversation tab
-        GoRoute(
-          path: RouteNames.conversation,
-          name: 'conversation',
-          builder: (context, state) => const ConversationPage(),
-        ),
 
         // History tab
         GoRoute(
@@ -353,16 +345,6 @@ class TranslationFullscreenPage extends StatelessWidget {
   }
 }
 
-class ConversationPage extends StatelessWidget {
-  const ConversationPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Conversation')),
-      body: const Center(child: Text('Conversation - To be implemented')),
-    );
-  }
-}
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});

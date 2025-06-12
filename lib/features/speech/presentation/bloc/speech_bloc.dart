@@ -1,3 +1,4 @@
+// lib/features/speech/presentation/bloc/speech_bloc.dart - SIMPLE FIX
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
@@ -216,112 +217,70 @@ class SpeechBloc extends Bloc<SpeechEvent, SpeechState> {
       ));
     }
   }
-Future<void> _onSpeakText(
-  SpeakTextEvent event,
-  Emitter<SpeechState> emit,
-) async {
-  if (!state.canSpeak) {
-    emit(state.copyWith(
-      status: SpeechStatus.error,
-      errorMessage: 'Cannot speak text in current state',
-    ));
-    return;
-  }
 
-  // Validate input text
-  if (event.text.trim().isEmpty) {
-    emit(state.copyWith(
-      status: SpeechStatus.error,
-      errorMessage: 'Cannot speak empty text',
-    ));
-    return;
-  }
-
-  // Set initial speaking state
-  emit(state.copyWith(
-    status: SpeechStatus.speaking,
-    currentSpeechText: event.text,
-    languageCode: event.languageCode,
-    speechRate: event.rate,
-    speechPitch: event.pitch,
-    speechVolume: event.volume,
-    errorMessage: null,
-  ));
-
-  try {
-    final result = await _textToSpeech(TextToSpeechParams(
-      text: event.text,
-      languageCode: event.languageCode,
-      rate: event.rate,
-      pitch: event.pitch,
-      volume: event.volume,
-    ));
-
-    result.fold(
-      (failure) {
-        emit(state.copyWith(
-          status: SpeechStatus.error,
-          errorMessage: failure.message,
-          currentSpeechText: null,
-        ));
-      },
-      (_) {
-        // TTS started successfully, monitor for completion
-        _monitorTTSCompletion(emit);
-      },
-    );
-  } catch (e) {
-    emit(state.copyWith(
-      status: SpeechStatus.error,
-      errorMessage: 'Failed to speak text: ${e.toString()}',
-      currentSpeechText: null,
-    ));
-  }
-}
-
-/// Monitor TTS completion using periodic checks
-void _monitorTTSCompletion(Emitter<SpeechState> emit) {
-  Timer.periodic(const Duration(milliseconds: 200), (timer) {
-    if (isClosed) {
-      timer.cancel();
+  Future<void> _onSpeakText(
+    SpeakTextEvent event,
+    Emitter<SpeechState> emit,
+  ) async {
+    if (!state.canSpeak) {
+      emit(state.copyWith(
+        status: SpeechStatus.error,
+        errorMessage: 'Cannot speak text in current state',
+      ));
       return;
     }
 
-    try {
-      // Check if TTS is still speaking via repository getter
-      final isSpeaking = _repository.isSpeaking;
-      
-      if (!isSpeaking && state.status == SpeechStatus.speaking) {
-        // TTS has completed
-        timer.cancel();
-        emit(state.copyWith(
-          status: SpeechStatus.ready,
-          currentSpeechText: null,
-        ));
-      }
-    } catch (e) {
-      // Error occurred, assume completed
-      timer.cancel();
-      if (state.status == SpeechStatus.speaking) {
-        emit(state.copyWith(
-          status: SpeechStatus.ready,
-          currentSpeechText: null,
-        ));
-      }
-    }
-  });
-
-  // Safety timeout to prevent infinite monitoring (5 minutes)
-  Timer(const Duration(minutes: 5), () {
-    if (state.status == SpeechStatus.speaking) {
+    // Validate input text
+    if (event.text.trim().isEmpty) {
       emit(state.copyWith(
         status: SpeechStatus.error,
-        errorMessage: 'Text-to-speech timed out',
+        errorMessage: 'Cannot speak empty text',
+      ));
+      return;
+    }
+
+    // Set initial speaking state
+    emit(state.copyWith(
+      status: SpeechStatus.speaking,
+      currentSpeechText: event.text,
+      languageCode: event.languageCode,
+      speechRate: event.rate,
+      speechPitch: event.pitch,
+      speechVolume: event.volume,
+      errorMessage: null,
+    ));
+
+    try {
+      final result = await _textToSpeech(TextToSpeechParams(
+        text: event.text,
+        languageCode: event.languageCode,
+        rate: event.rate,
+        pitch: event.pitch,
+        volume: event.volume,
+      ));
+
+      result.fold(
+        (failure) {
+          emit(state.copyWith(
+            status: SpeechStatus.error,
+            errorMessage: failure.message,
+            currentSpeechText: null,
+          ));
+        },
+        (_) {
+          // TTS started successfully
+          // Note: The speaking state will be handled by manual stop or UI tracking
+          // This avoids the timer emission issue
+        },
+      );
+    } catch (e) {
+      emit(state.copyWith(
+        status: SpeechStatus.error,
+        errorMessage: 'Failed to speak text: ${e.toString()}',
         currentSpeechText: null,
       ));
     }
-  });
-}
+  }
 
   Future<void> _onStopSpeaking(
     StopSpeakingEvent event,
@@ -383,7 +342,7 @@ void _monitorTTSCompletion(Emitter<SpeechState> emit) {
       result.fold(
         (failure) {
           emit(state.copyWith(
-            status: SpeechStatus.error,
+            hasMicrophonePermission: false,
             errorMessage: failure.message,
           ));
         },
@@ -395,7 +354,7 @@ void _monitorTTSCompletion(Emitter<SpeechState> emit) {
       );
     } catch (e) {
       emit(state.copyWith(
-        status: SpeechStatus.error,
+        hasMicrophonePermission: false,
         errorMessage: 'Failed to check microphone permission: ${e.toString()}',
       ));
     }
@@ -410,19 +369,20 @@ void _monitorTTSCompletion(Emitter<SpeechState> emit) {
       result.fold(
         (failure) {
           emit(state.copyWith(
-            status: SpeechStatus.error,
+            hasMicrophonePermission: false,
             errorMessage: failure.message,
           ));
         },
-        (hasPermission) {
+        (granted) {
           emit(state.copyWith(
-            hasMicrophonePermission: hasPermission,
+            hasMicrophonePermission: granted,
+            errorMessage: granted ? null : 'Microphone permission denied',
           ));
         },
       );
     } catch (e) {
       emit(state.copyWith(
-        status: SpeechStatus.error,
+        hasMicrophonePermission: false,
         errorMessage:
             'Failed to request microphone permission: ${e.toString()}',
       ));

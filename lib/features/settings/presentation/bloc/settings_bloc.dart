@@ -85,7 +85,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         failure.message,
         code: failure.code,
       )),
-      (settings) => emit(SettingsLoaded(settings)),
+      (settings) => emit(SettingsLoaded()),
     );
   }
 

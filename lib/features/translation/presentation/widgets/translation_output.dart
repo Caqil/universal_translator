@@ -1,9 +1,11 @@
+// lib/features/translation/presentation/widgets/translation_output.dart - WITH MODAL
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:ui' as ui;
 
 import '../../../../core/constants/app_constants.dart';
@@ -12,9 +14,11 @@ import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/app_utils.dart';
+import '../../../../core/utils/localization_helper.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/translation.dart';
+import 'alternatives_modal.dart'; // Import the modal
 
 /// Translation output widget displaying translated text with actions
 class TranslationOutput extends StatefulWidget {
@@ -39,10 +43,10 @@ class TranslationOutput extends StatefulWidget {
   /// Callback when favorite is toggled
   final VoidCallback? onFavoriteToggled;
 
-  /// Callback when text-to-speech is requested
+  /// Callback when text-to-speech is requested (optional)
   final VoidCallback? onTextToSpeech;
 
-  /// Whether text-to-speech is currently playing
+  /// Whether text-to-speech is currently playing (not used, we manage internally)
   final bool isSpeaking;
 
   const TranslationOutput({
@@ -67,6 +71,10 @@ class _TranslationOutputState extends State<TranslationOutput>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  // Single TTS instance
+  FlutterTts? _tts;
+  bool _isSpeaking = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,12 +91,79 @@ class _TranslationOutputState extends State<TranslationOutput>
     ));
 
     _fadeController.forward();
+    _initializeTTS();
   }
 
   @override
   void dispose() {
+    _tts?.stop();
     _fadeController.dispose();
     super.dispose();
+  }
+
+  // Initialize TTS once
+  Future<void> _initializeTTS() async {
+    _tts = FlutterTts();
+
+    // Set completion handler - stops when done
+    _tts!.setCompletionHandler(() {
+      if (mounted) {
+        setState(() => _isSpeaking = false);
+      }
+    });
+
+    // Set error handler
+    _tts!.setErrorHandler((msg) {
+      if (mounted) {
+        setState(() => _isSpeaking = false);
+        context.showError('TTS Error: $msg');
+      }
+    });
+
+    // Set start handler
+    _tts!.setStartHandler(() {
+      if (mounted) {
+        setState(() => _isSpeaking = true);
+      }
+    });
+  }
+
+  // Simple TTS function - only runs once per click
+  Future<void> _handleTTSClick() async {
+    if (_tts == null) return;
+
+    try {
+      if (_isSpeaking) {
+        // Stop if currently speaking
+        await _tts!.stop();
+        setState(() => _isSpeaking = false);
+        return;
+      }
+
+      // Start speaking the translated text
+      final languageCode =
+          LocalizationHelper.mapLanguageCode(widget.targetLanguage);
+
+      await _tts!.setLanguage(languageCode);
+      await _tts!.setSpeechRate(0.5);
+      await _tts!.setPitch(1.0);
+      await _tts!.setVolume(1.0);
+
+      final result = await _tts!.speak(widget.translation.translatedText);
+
+      if (result != 1) {
+        // TTS failed to start
+        setState(() => _isSpeaking = false);
+        if (mounted) {
+          context.showError('Failed to start text-to-speech');
+        }
+      }
+    } catch (e) {
+      setState(() => _isSpeaking = false);
+      if (mounted) {
+        context.showError('TTS Error: ${e.toString()}');
+      }
+    }
   }
 
   void _onCopyPressed() async {
@@ -108,20 +183,52 @@ class _TranslationOutputState extends State<TranslationOutput>
   void _onSharePressed() async {
     final sourceLanguageName =
         LanguageConstants.getLanguageName(widget.translation.sourceLanguage);
-    final targetLanguageName =
-        LanguageConstants.getLanguageName(widget.translation.targetLanguage);
+    final targetLanguageInfo = _getTargetLanguageInfo();
 
     final shareText = '''
-${widget.translation.sourceText}
+${'translation.source_text'.tr()}: ${widget.translation.sourceText}
+${'translation.translated_text'.tr()}: ${widget.translation.translatedText}
+$sourceLanguageName → ${targetLanguageInfo.name}
+${widget.showConfidence && widget.translation.confidence != null ? '${'translation.confidence'.tr()}: ${(widget.translation.confidence! * 100).toStringAsFixed(1)}%' : ''}
+    ''';
 
-↓ $sourceLanguageName → $targetLanguageName
+    try {
+      await Share.share(shareText);
+    } catch (e) {
+      if (mounted) {
+        context.showError('Share failed');
+      }
+    }
+  }
 
-${widget.translation.translatedText}
+  void _onFavoritePressed() async {
+    final sonner = ShadSonner.of(context);
 
-${AppConstants.appName}
-''';
+    try {
+      if (widget.isFavorite) {
+        sonner.show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('favorites.favorite_removed'.tr()),
+          ),
+        );
+      } else {
+        sonner.show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('favorites.favorite_added'.tr()),
+          ),
+        );
+      }
 
-    await Share.share(shareText, subject: 'translation_share_subject'.tr());
+      widget.onFavoriteToggled?.call();
+    } catch (e) {
+      sonner.show(
+        ShadToast.destructive(
+          description: Text('Favorite toggle failed'),
+        ),
+      );
+    }
   }
 
   void _onFullScreenPressed() {
@@ -134,6 +241,18 @@ ${AppConstants.appName}
     );
   }
 
+  // Open alternatives modal
+  void _onAlternativesPressed() {
+    showDialog(
+      context: context,
+      builder: (context) => AlternativesModal(
+        alternatives: widget.translation.alternatives!,
+        targetLanguage: widget.targetLanguage,
+        primaryTranslation: widget.translation.translatedText,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final brightness = context.brightness;
@@ -141,36 +260,32 @@ ${AppConstants.appName}
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
+        margin: const EdgeInsets.all(AppConstants.defaultPadding),
         decoration: BoxDecoration(
-          color: AppColors.surface(brightness),
-          borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
+          color: AppColors.card(brightness),
+          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           border: Border.all(
             color: AppColors.border(brightness),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow(brightness),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with language info and confidence
             _buildHeader(context, brightness),
-
-            const Divider(height: 1),
-
-            // Translation text
-            _buildTranslationText(context, brightness),
-
-            // Alternatives (if available)
+            _buildTranslationContent(context, brightness),
+            if (widget.showConfidence && widget.translation.confidence != null)
+              _buildConfidenceIndicator(context, brightness),
             if (widget.showAlternatives &&
-                widget.translation.alternatives != null &&
-                widget.translation.alternatives!.isNotEmpty) ...[
-              const Divider(height: 1),
-              _buildAlternatives(context, brightness),
-            ],
-
-            const Divider(height: 0.2),
-
-            // Action buttons
+                widget.translation.alternatives!.isNotEmpty)
+              _buildAlternativesPreview(context, brightness),
             _buildActionButtons(context, brightness),
           ],
         ),
@@ -181,184 +296,206 @@ ${AppConstants.appName}
   Widget _buildHeader(BuildContext context, Brightness brightness) {
     final targetLanguageInfo = _getTargetLanguageInfo();
 
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        color: AppColors.muted(brightness),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(AppConstants.defaultBorderRadius),
+          topRight: Radius.circular(AppConstants.defaultBorderRadius),
+        ),
+      ),
       child: Row(
         children: [
-          // Target language info
-          Row(
-            children: [
-              Text(
-                targetLanguageInfo.flag,
-                style: const TextStyle(fontSize: AppConstants.fontSizeLarge),
-              ),
-              const SizedBox(width: AppConstants.smallPadding),
-              Text(
-                targetLanguageInfo.name,
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: AppColors.primary(brightness),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          Text(
+            targetLanguageInfo.flag,
+            style: AppTextStyles.headlineSmall,
           ),
-
-          const Spacer(),
-
-          // Confidence score
-          if (widget.showConfidence &&
-              widget.translation.confidence != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.smallPadding,
-                vertical: AppConstants.smallPadding / 2,
-              ),
-              decoration: BoxDecoration(
-                color:
-                    AppUtils.getConfidenceColor(widget.translation.confidence!)
-                        .withOpacity(0.1),
-                borderRadius:
-                    BorderRadius.circular(AppConstants.smallBorderRadius),
-                border: Border.all(
-                  color: AppUtils.getConfidenceColor(
-                      widget.translation.confidence!),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Iconsax.verify,
-                    size: AppConstants.iconSizeSmall,
-                    color: AppUtils.getConfidenceColor(
-                        widget.translation.confidence!),
+          const SizedBox(width: AppConstants.smallPadding),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  targetLanguageInfo.name,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground(brightness),
                   ),
-                  const SizedBox(width: AppConstants.smallPadding / 2),
+                ),
+                if (targetLanguageInfo.nativeName != targetLanguageInfo.name)
                   Text(
-                    AppUtils.formatConfidence(widget.translation.confidence!),
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppUtils.getConfidenceColor(
-                          widget.translation.confidence!),
-                      fontWeight: FontWeight.w600,
+                    targetLanguageInfo.nativeName,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.mutedForeground(brightness),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-          ],
-
-          // Full screen button
+          ),
           IconButton(
             onPressed: _onFullScreenPressed,
-            icon: const Icon(Iconsax.maximize_4),
-            iconSize: AppConstants.iconSizeRegular,
-            tooltip: 'translation.view_fullscreen'.tr(),
+            icon: Icon(
+              Iconsax.maximize_1,
+              color: AppColors.mutedForeground(brightness),
+            ),
+            iconSize: AppConstants.iconSizeSmall,
+            tooltip: 'View fullscreen',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTranslationText(BuildContext context, Brightness brightness) {
+  Widget _buildTranslationContent(BuildContext context, Brightness brightness) {
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: SelectableText(
         widget.translation.translatedText,
-        style: AppTextStyles.translationOutput.copyWith(
-          color: AppColors.primary(brightness),
+        style: AppTextStyles.bodyLarge.copyWith(
+          color: AppColors.foreground(brightness),
+          height: 1.5,
         ),
         textDirection: _getTextDirection(),
       ),
     );
   }
 
-  Widget _buildAlternatives(BuildContext context, Brightness brightness) {
-    final alternatives = widget.translation.alternatives!;
-    final displayAlternatives =
-        alternatives.take(3).toList(); // Show max 3 alternatives
-    final sonner = ShadSonner.of(context);
+  Widget _buildConfidenceIndicator(
+      BuildContext context, Brightness brightness) {
+    final confidence = widget.translation.confidence!;
+    final percentage = (confidence * 100).round();
+
+    Color getConfidenceColor() {
+      if (confidence >= 0.8) return AppColors.success(brightness);
+      if (confidence >= 0.6) return AppColors.warning(brightness);
+      return AppColors.destructive(brightness);
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.defaultPadding,
+        vertical: AppConstants.smallPadding,
+      ),
+      child: Row(
         children: [
+          Icon(
+            Iconsax.info_circle,
+            size: AppConstants.iconSizeSmall,
+            color: AppColors.mutedForeground(brightness),
+          ),
+          const SizedBox(width: AppConstants.smallPadding),
           Text(
-            'translation.alternatives'.tr(),
-            style: AppTextStyles.labelMedium.copyWith(
+            'translation.confidence'.tr(),
+            style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.mutedForeground(brightness),
+            ),
+          ),
+          const SizedBox(width: AppConstants.smallPadding),
+          Expanded(
+            child: LinearProgressIndicator(
+              value: confidence,
+              backgroundColor: AppColors.muted(brightness),
+              valueColor: AlwaysStoppedAnimation<Color>(getConfidenceColor()),
+            ),
+          ),
+          const SizedBox(width: AppConstants.smallPadding),
+          Text(
+            '$percentage%',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: getConfidenceColor(),
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppConstants.smallPadding),
-          ...displayAlternatives.asMap().entries.map((entry) {
-            final index = entry.key;
-            final alternative = entry.value;
+        ],
+      ),
+    );
+  }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index < displayAlternatives.length - 1
-                    ? AppConstants.smallPadding
-                    : 0,
-              ),
-              child: InkWell(
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: alternative));
-                  if (mounted) {
-                    sonner.show(
-                      ShadToast.raw(
-                        variant: ShadToastVariant.primary,
-                        description: Text('alternative_copied'.tr()),
-                      ),
-                    );
-                  }
-                },
-                borderRadius:
-                    BorderRadius.circular(AppConstants.smallBorderRadius),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppConstants.smallPadding),
-                  decoration: BoxDecoration(
-                    color:
-                        AppColors.mutedForeground(brightness).withOpacity(0.05),
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.smallBorderRadius),
-                    border: Border.all(
-                      color: AppColors.border(brightness),
-                      width: 1,
+  // Clean alternatives preview - shows summary and button to open modal
+  Widget _buildAlternativesPreview(
+      BuildContext context, Brightness brightness) {
+    final alternativesCount = widget.translation.alternatives!.length;
+    final previewText = widget.translation.alternatives!.first;
+    final maxPreviewLength = 60;
+    final truncatedPreview = previewText.length > maxPreviewLength
+        ? '${previewText.substring(0, maxPreviewLength)}...'
+        : previewText;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppConstants.defaultPadding,
+        vertical: AppConstants.smallPadding,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.muted(brightness).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        border: Border.all(
+          color: AppColors.border(brightness),
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: _onAlternativesPressed,
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        child: Padding(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Row(
+            children: [
+              // Icon and count
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary(brightness),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    '$alternativesCount',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${index + 1}.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.mutedForeground(brightness),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: AppConstants.smallPadding),
-                      Expanded(
-                        child: Text(
-                          alternative,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primary(brightness),
-                          ),
-                          textDirection: _getTextDirection(),
-                        ),
-                      ),
-                      Icon(
-                        Iconsax.copy,
-                        size: AppConstants.iconSizeSmall,
-                        color: AppColors.mutedForeground(brightness),
-                      ),
-                    ],
                   ),
                 ),
               ),
-            );
-          }),
-        ],
+              const SizedBox(width: AppConstants.defaultPadding),
+
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Alternative Translations',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.foreground(brightness),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      truncatedPreview,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.mutedForeground(brightness),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Arrow
+              Icon(
+                Iconsax.arrow_right_3,
+                size: AppConstants.iconSizeSmall,
+                color: AppColors.mutedForeground(brightness),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -390,27 +527,22 @@ ${AppConstants.appName}
 
           const Spacer(),
 
-          // Text-to-speech button
-          if (LanguageConstants.supportsTextToSpeech(
-              widget.targetLanguage)) ...[
-            IconButton(
-              onPressed: widget.onTextToSpeech,
-              icon: Icon(
-                widget.isSpeaking ? Iconsax.pause : Iconsax.volume_high,
-                color: widget.isSpeaking
-                    ? AppColors.voiceActive
-                    : AppColors.mutedForeground(brightness),
-              ),
-              iconSize: AppConstants.iconSizeRegular,
-              tooltip: widget.isSpeaking
-                  ? 'translation.stop_speaking'.tr()
-                  : 'translation.speak_text'.tr(),
+          // Text-to-speech button - SINGLE IMPLEMENTATION
+          IconButton(
+            onPressed: _handleTTSClick, // Only calls once per click
+            icon: Icon(
+              _isSpeaking ? Iconsax.pause : Iconsax.volume_high,
+              color: _isSpeaking
+                  ? AppColors.voiceActive
+                  : AppColors.mutedForeground(brightness),
             ),
-          ],
+            iconSize: AppConstants.iconSizeRegular,
+            tooltip: _isSpeaking ? 'Stop speaking' : 'Speak text',
+          ),
 
           // Favorite button
           IconButton(
-            onPressed: widget.onFavoriteToggled,
+            onPressed: _onFavoritePressed,
             icon: Icon(
               widget.isFavorite ? Iconsax.heart5 : Iconsax.heart,
               color: widget.isFavorite
@@ -419,8 +551,8 @@ ${AppConstants.appName}
             ),
             iconSize: AppConstants.iconSizeRegular,
             tooltip: widget.isFavorite
-                ? 'favorites.remove_from_favorites'.tr()
-                : 'favorites.add_to_favorites'.tr(),
+                ? 'Remove from favorites'
+                : 'Add to favorites',
           ),
         ],
       ),
@@ -458,7 +590,6 @@ ${AppConstants.appName}
       }
       return ui.TextDirection.ltr;
     } catch (e) {
-      // Fallback to LTR if there's any issue
       return ui.TextDirection.ltr;
     }
   }
@@ -489,47 +620,95 @@ class _FullScreenTranslationDialog extends StatelessWidget {
     final brightness = context.brightness;
 
     return Dialog.fullscreen(
-      backgroundColor: AppColors.background(brightness),
       child: Scaffold(
         backgroundColor: AppColors.background(brightness),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          title: Text('Translated Text'),
+          backgroundColor: AppColors.background(brightness),
+          foregroundColor: AppColors.foreground(brightness),
           elevation: 0,
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Iconsax.close_circle),
+            icon: const Icon(Iconsax.arrow_left),
           ),
-          title: Text(
-            'translation_fullscreen'.tr(),
-            style: AppTextStyles.titleLarge,
-          ),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                await Clipboard.setData(
-                    ClipboardData(text: translation.translatedText));
-                if (context.mounted) {
-                  context.showSuccess('text_copied'.tr());
-                }
-              },
-              icon: const Icon(Iconsax.copy),
-            ),
-          ],
         ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.largePadding),
-            child: Center(
-              child: SelectableText(
-                translation.translatedText,
-                style: AppTextStyles.displaySmall.copyWith(
-                  color: AppColors.primary(brightness),
-                  height: 1.4,
+        body: Padding(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Source text
+              Container(
+                padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                decoration: BoxDecoration(
+                  color: AppColors.muted(brightness),
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.defaultBorderRadius),
                 ),
-                textAlign: TextAlign.center,
-                textDirection: _getTextDirection(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Source Text',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.mutedForeground(brightness),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.smallPadding),
+                    SelectableText(
+                      translation.sourceText,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.foreground(brightness),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+              const SizedBox(height: AppConstants.defaultPadding),
+
+              // Translated text
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                  decoration: BoxDecoration(
+                    color: AppColors.card(brightness),
+                    borderRadius:
+                        BorderRadius.circular(AppConstants.defaultBorderRadius),
+                    border: Border.all(
+                      color: AppColors.border(brightness),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Translated Text',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.mutedForeground(brightness),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppConstants.smallPadding),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: SelectableText(
+                            translation.translatedText,
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: AppColors.foreground(brightness),
+                              height: 1.6,
+                            ),
+                            textDirection: _getTextDirection(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -537,6 +716,7 @@ class _FullScreenTranslationDialog extends StatelessWidget {
   }
 }
 
+/// Helper class for language information
 class _LanguageInfo {
   final String code;
   final String name;

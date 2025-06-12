@@ -1,4 +1,3 @@
-
 import 'package:bloc/bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
@@ -7,6 +6,7 @@ import '../../../../core/utils/app_utils.dart';
 import '../../../history/domain/entities/history_item.dart';
 import '../../../history/domain/usecases/save_to_history.dart';
 import '../../../settings/domain/usecases/get_settings.dart';
+import '../../domain/repositories/translation_repository.dart';
 import '../../domain/usecases/detect_language.dart';
 import '../../domain/usecases/get_supported_languages.dart';
 import '../../domain/usecases/translate_text.dart';
@@ -21,13 +21,14 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
   final SaveToHistory _saveToHistory;
   final GetSettings _getSettings;
   final Uuid _uuid = const Uuid();
-
+  final TranslationRepository _translationRepository;
   TranslationBloc(
     this._translateText,
     this._detectLanguage,
     this._getSupportedLanguages,
     this._saveToHistory,
     this._getSettings,
+    this._translationRepository,
   ) : super(const TranslationInitial()) {
     on<TranslateTextEvent>(_onTranslateText);
     on<DetectLanguageEvent>(_onDetectLanguage);
@@ -182,6 +183,91 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
         errorMessage: null,
       )),
     );
+  }
+
+  Future<void> _onToggleFavorite(
+    ToggleFavoriteEvent event,
+    Emitter<TranslationState> emit,
+  ) async {
+    final currentState = state;
+
+    if (currentState.currentTranslation == null) {
+      emit(currentState.copyWith(
+        errorMessage: 'No translation to favorite',
+      ));
+      return;
+    }
+
+    try {
+      final result =
+          await _translationRepository.toggleFavorite(event.translationId);
+
+      result.fold(
+        (failure) {
+          emit(currentState.copyWith(
+            errorMessage: failure.message,
+          ));
+        },
+        (updatedTranslation) {
+          emit(currentState.copyWith(
+            currentTranslation: updatedTranslation,
+            errorMessage: null,
+          ));
+        },
+      );
+    } catch (e) {
+      emit(currentState.copyWith(
+        errorMessage: 'Failed to toggle favorite: ${e.toString()}',
+      ));
+    }
+  }
+
+  Future<void> _onSaveCurrentTranslation(
+    SaveCurrentTranslationEvent event,
+    Emitter<TranslationState> emit,
+  ) async {
+    final currentState = state;
+
+    if (currentState.currentTranslation == null) {
+      emit(currentState.copyWith(
+        errorMessage: 'No translation to save',
+      ));
+      return;
+    }
+
+    try {
+      // Save to history
+      final historyItem = HistoryItem(
+        id: _uuid.v4(),
+        sourceText: currentState.currentTranslation!.sourceText,
+        translatedText: currentState.currentTranslation!.translatedText,
+        sourceLanguage: currentState.currentTranslation!.sourceLanguage,
+        targetLanguage: currentState.currentTranslation!.targetLanguage,
+        timestamp: DateTime.now(),
+        confidence: currentState.currentTranslation!.confidence,
+        isFavorite: event.asFavorite,
+      );
+
+      final result = await _saveToHistory(historyItem);
+
+      result.fold(
+        (failure) {
+          emit(currentState.copyWith(
+            errorMessage: failure.message,
+          ));
+        },
+        (_) {
+          // Successfully saved - you might want to emit a success state or just clear error
+          emit(currentState.copyWith(
+            errorMessage: null,
+          ));
+        },
+      );
+    } catch (e) {
+      emit(currentState.copyWith(
+        errorMessage: 'Failed to save translation: ${e.toString()}',
+      ));
+    }
   }
 
   Future<void> _onLoadSupportedLanguages(

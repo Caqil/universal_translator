@@ -64,7 +64,7 @@ class AppConstants {
   static const String settingsBoxName = 'settings_box';
   static const String languagesBoxName = 'languages_box';
   static const String conversationsBoxName = 'conversations_box';
-
+  static const String messagesBoxName = 'messages_box';
   // Storage Keys - SharedPreferences
   static const String keyFirstLaunch = 'first_launch';
   static const String keySelectedSourceLanguage = 'selected_source_language';

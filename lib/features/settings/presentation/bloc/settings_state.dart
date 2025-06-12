@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import '../../../translation/data/models/translation_mode_model.dart';
+import '../../../translation/domain/entities/download_status.dart';
 import '../../data/models/app_settings_model.dart';
 
 /// Base class for all settings states
@@ -22,11 +24,41 @@ class SettingsLoading extends SettingsState {
 /// State when settings have been loaded successfully
 class SettingsLoaded extends SettingsState {
   final AppSettings settings;
-
-  const SettingsLoaded(this.settings);
+  final TranslationMode translationMode;
+  final bool isOfflineModeEnabled;
+  final bool autoDownloadEnabled;
+  final List<DownloadStatus> downloadedLanguages;
+  const SettingsLoaded({
+    required this.settings,
+    required this.translationMode,
+    required this.isOfflineModeEnabled,
+    required this.autoDownloadEnabled,
+    required this.downloadedLanguages,
+  });
 
   @override
-  List<Object?> get props => [settings];
+  List<Object?> get props => [
+        settings,
+        translationMode,
+        isOfflineModeEnabled,
+        autoDownloadEnabled,
+        downloadedLanguages,
+      ];
+  SettingsLoaded copyWith({
+    AppSettings? settings,
+    TranslationMode? translationMode,
+    bool? isOfflineModeEnabled,
+    bool? autoDownloadEnabled,
+    List<DownloadStatus>? downloadedLanguages,
+  }) {
+    return SettingsLoaded(
+      settings: settings ?? this.settings,
+      translationMode: translationMode ?? this.translationMode,
+      isOfflineModeEnabled: isOfflineModeEnabled ?? this.isOfflineModeEnabled,
+      autoDownloadEnabled: autoDownloadEnabled ?? this.autoDownloadEnabled,
+      downloadedLanguages: downloadedLanguages ?? this.downloadedLanguages,
+    );
+  }
 }
 
 /// State when settings are being updated

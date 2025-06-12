@@ -1,34 +1,5 @@
+// lib/core/themes/app_colors.dart - FIXED WITH MISSING METHODS
 import 'package:flutter/material.dart';
-
-extension AppColorsExtension on AppColors {
-  /// Get success color for brightness
-  static Color success(Brightness brightness) {
-    return brightness == Brightness.light
-        ? AppColors.lightSuccess
-        : AppColors.darkSuccess;
-  }
-
-  /// Get warning color for brightness
-  static Color warning(Brightness brightness) {
-    return brightness == Brightness.light
-        ? AppColors.lightWarning
-        : AppColors.darkWarning;
-  }
-
-  /// Get info color for brightness
-  static Color info(Brightness brightness) {
-    return brightness == Brightness.light
-        ? AppColors.lightInfo
-        : AppColors.darkInfo;
-  }
-
-  /// Get destructive color for brightness
-  static Color destructive(Brightness brightness) {
-    return brightness == Brightness.light
-        ? AppColors.lightDestructive
-        : AppColors.darkDestructive;
-  }
-}
 
 /// Application color scheme following shadcn/ui design system
 class AppColors {
@@ -74,6 +45,9 @@ class AppColors {
   static const Color lightPopover = Color(0xFFFFFFFF);
   static const Color lightPopoverForeground = Color(0xFF0F172A);
 
+  /// Shadow colors - Light theme
+  static const Color lightShadow = Color(0x0F000000);
+
   // ============ Dark Theme Colors ============
 
   /// Primary colors - Dark theme
@@ -112,6 +86,9 @@ class AppColors {
   /// Popover colors - Dark theme
   static const Color darkPopover = Color(0xFF09090B);
   static const Color darkPopoverForeground = Color(0xFFFAFAFA);
+
+  /// Shadow colors - Dark theme
+  static const Color darkShadow = Color(0x33000000);
 
   // ============ Semantic Colors ============
 
@@ -205,6 +182,60 @@ class AppColors {
     );
   }
 
+  /// Get foreground color for theme
+  static Color foreground(Brightness brightness) {
+    return adaptive(
+      light: lightForeground,
+      dark: darkForeground,
+      brightness: brightness,
+    );
+  }
+
+  /// Get card color for theme
+  static Color card(Brightness brightness) {
+    return adaptive(
+      light: lightCard,
+      dark: darkCard,
+      brightness: brightness,
+    );
+  }
+
+  /// Get card foreground color for theme
+  static Color cardForeground(Brightness brightness) {
+    return adaptive(
+      light: lightCardForeground,
+      dark: darkCardForeground,
+      brightness: brightness,
+    );
+  }
+
+  /// Get muted color for theme
+  static Color muted(Brightness brightness) {
+    return adaptive(
+      light: lightMuted,
+      dark: darkMuted,
+      brightness: brightness,
+    );
+  }
+
+  /// Get muted foreground color for theme
+  static Color mutedForeground(Brightness brightness) {
+    return adaptive(
+      light: lightMutedForeground,
+      dark: darkMutedForeground,
+      brightness: brightness,
+    );
+  }
+
+  /// Get shadow color for theme
+  static Color shadow(Brightness brightness) {
+    return adaptive(
+      light: lightShadow,
+      dark: darkShadow,
+      brightness: brightness,
+    );
+  }
+
   /// Get surface color for theme
   static Color surface(Brightness brightness) {
     return adaptive(
@@ -223,17 +254,90 @@ class AppColors {
     );
   }
 
-  /// Get muted foreground color for theme
-  static Color mutedForeground(Brightness brightness) {
+  /// Get input color for theme
+  static Color input(Brightness brightness) {
     return adaptive(
-      light: lightMutedForeground,
-      dark: darkMutedForeground,
+      light: lightInput,
+      dark: darkInput,
       brightness: brightness,
     );
   }
 
+  /// Get ring color for theme
+  static Color ring(Brightness brightness) {
+    return adaptive(
+      light: lightRing,
+      dark: darkRing,
+      brightness: brightness,
+    );
+  }
+
+  /// Get secondary color for theme
+  static Color secondary(Brightness brightness) {
+    return adaptive(
+      light: lightSecondary,
+      dark: darkSecondary,
+      brightness: brightness,
+    );
+  }
+
+  /// Get secondary foreground color for theme
+  static Color secondaryForeground(Brightness brightness) {
+    return adaptive(
+      light: lightSecondaryForeground,
+      dark: darkSecondaryForeground,
+      brightness: brightness,
+    );
+  }
+
+  /// Get accent color for theme
+  static Color accent(Brightness brightness) {
+    return adaptive(
+      light: lightAccent,
+      dark: darkAccent,
+      brightness: brightness,
+    );
+  }
+
+  /// Get accent foreground color for theme
+  static Color accentForeground(Brightness brightness) {
+    return adaptive(
+      light: lightAccentForeground,
+      dark: darkAccentForeground,
+      brightness: brightness,
+    );
+  }
+
+  /// Get popover color for theme
+  static Color popover(Brightness brightness) {
+    return adaptive(
+      light: lightPopover,
+      dark: darkPopover,
+      brightness: brightness,
+    );
+  }
+
+  /// Get popover foreground color for theme
+  static Color popoverForeground(Brightness brightness) {
+    return adaptive(
+      light: lightPopoverForeground,
+      dark: darkPopoverForeground,
+      brightness: brightness,
+    );
+  }
+
+  // ============ Semantic Color Methods ============
+
+  /// Get success color for brightness
   static Color success(Brightness brightness) {
     return brightness == Brightness.light ? lightSuccess : darkSuccess;
+  }
+
+  /// Get success foreground color for brightness
+  static Color successForeground(Brightness brightness) {
+    return brightness == Brightness.light
+        ? lightSuccessForeground
+        : darkSuccessForeground;
   }
 
   /// Get warning color for brightness
@@ -241,13 +345,56 @@ class AppColors {
     return brightness == Brightness.light ? lightWarning : darkWarning;
   }
 
+  /// Get warning foreground color for brightness
+  static Color warningForeground(Brightness brightness) {
+    return brightness == Brightness.light
+        ? lightWarningForeground
+        : darkWarningForeground;
+  }
+
   /// Get info color for brightness
   static Color info(Brightness brightness) {
     return brightness == Brightness.light ? lightInfo : darkInfo;
   }
 
+  /// Get info foreground color for brightness
+  static Color infoForeground(Brightness brightness) {
+    return brightness == Brightness.light
+        ? lightInfoForeground
+        : darkInfoForeground;
+  }
+
   /// Get destructive color for brightness
   static Color destructive(Brightness brightness) {
     return brightness == Brightness.light ? lightDestructive : darkDestructive;
+  }
+
+  /// Get destructive foreground color for brightness
+  static Color destructiveForeground(Brightness brightness) {
+    return brightness == Brightness.light
+        ? lightDestructiveForeground
+        : darkDestructiveForeground;
+  }
+}
+
+extension AppColorsExtension on AppColors {
+  /// Get success color for brightness
+  static Color success(Brightness brightness) {
+    return AppColors.success(brightness);
+  }
+
+  /// Get warning color for brightness
+  static Color warning(Brightness brightness) {
+    return AppColors.warning(brightness);
+  }
+
+  /// Get info color for brightness
+  static Color info(Brightness brightness) {
+    return AppColors.info(brightness);
+  }
+
+  /// Get destructive color for brightness
+  static Color destructive(Brightness brightness) {
+    return AppColors.destructive(brightness);
   }
 }

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -57,22 +58,24 @@ class AppUtils {
   /// Extract initials from a string (e.g., "John Doe" -> "JD")
   static String getInitials(String value, {int maxInitials = 2}) {
     if (isNullOrEmpty(value)) return '';
-    
+
     final words = cleanString(value).split(' ');
     final initials = words
         .take(maxInitials)
         .map((word) => word.isNotEmpty ? word[0].toUpperCase() : '')
         .where((initial) => initial.isNotEmpty)
         .join();
-    
+
     return initials;
   }
 
   /// Generate a random string of specified length
   static String generateRandomString(int length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random.secure();
-    return List.generate(length, (index) => chars[random.nextInt(chars.length)]).join();
+    return List.generate(length, (index) => chars[random.nextInt(chars.length)])
+        .join();
   }
 
   /// Convert string to slug format (URL-friendly)
@@ -105,7 +108,8 @@ class AppUtils {
   }
 
   /// Format currency
-  static String formatCurrency(double value, {String locale = 'en_US', String symbol = '\$'}) {
+  static String formatCurrency(double value,
+      {String locale = 'en_US', String symbol = '\$'}) {
     final formatter = NumberFormat.currency(locale: locale, symbol: symbol);
     return formatter.format(value);
   }
@@ -157,7 +161,8 @@ class AppUtils {
   }
 
   /// Format DateTime for display
-  static String formatDateTime(DateTime dateTime, {String pattern = 'MMM dd, yyyy h:mm a'}) {
+  static String formatDateTime(DateTime dateTime,
+      {String pattern = 'MMM dd, yyyy h:mm a'}) {
     return DateFormat(pattern).format(dateTime);
   }
 
@@ -165,7 +170,7 @@ class AppUtils {
   static String getRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.isNegative) {
       // Future dates
       final futureDiff = dateTime.difference(now);
@@ -195,15 +200,17 @@ class AppUtils {
   /// Check if date is today
   static bool isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   /// Check if date is yesterday
   static bool isYesterday(DateTime date) {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return date.year == yesterday.year && 
-           date.month == yesterday.month && 
-           date.day == yesterday.day;
+    return date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day;
   }
 
   /// Check if date is this week
@@ -212,7 +219,7 @@ class AppUtils {
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
     return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-           date.isBefore(endOfWeek.add(const Duration(days: 1)));
+        date.isBefore(endOfWeek.add(const Duration(days: 1)));
   }
 
   // ============ Platform & Device Utilities ============
@@ -221,7 +228,8 @@ class AppUtils {
   static bool get isMobile => Platform.isIOS || Platform.isAndroid;
 
   /// Check if running on desktop (Windows, macOS, or Linux)
-  static bool get isDesktop => Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+  static bool get isDesktop =>
+      Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
   /// Check if running on web
   static bool get isWeb => identical(0, 0.0);
@@ -236,14 +244,14 @@ class AppUtils {
   static Future<Map<String, dynamic>> getDeviceInfo() async {
     final deviceInfo = DeviceInfoPlugin();
     final packageInfo = await PackageInfo.fromPlatform();
-    
+
     Map<String, dynamic> info = {
       'appName': packageInfo.appName,
       'packageName': packageInfo.packageName,
       'version': packageInfo.version,
       'buildNumber': packageInfo.buildNumber,
     };
-    
+
     if (Platform.isAndroid) {
       final androidInfo = await deviceInfo.androidInfo;
       info.addAll({
@@ -263,7 +271,7 @@ class AppUtils {
         'identifierForVendor': iosInfo.identifierForVendor,
       });
     }
-    
+
     return info;
   }
 
@@ -271,7 +279,7 @@ class AppUtils {
 
   /// Show snackbar with custom styling
   static void showSnackBar(
-    BuildContext context, 
+    BuildContext context,
     String message, {
     Color? backgroundColor,
     Color? textColor,
@@ -280,32 +288,13 @@ class AppUtils {
     SnackBarAction? action,
   }) {
     final brightness = Theme.of(context).brightness;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: textColor ?? AppColors.primary(brightness)),
-              const SizedBox(width: AppConstants.smallPadding),
-            ],
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: textColor),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: backgroundColor ?? AppColors.surface(brightness),
-        duration: duration,
-        action: action,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-        ),
+    ShadToaster.of(context).show(
+      ShadToast(
+        description:  Text(message),
+        
       ),
     );
+    
   }
 
   /// Show success snackbar
@@ -325,11 +314,11 @@ class AppUtils {
     showSnackBar(
       context,
       message,
-      backgroundColor: brightness == Brightness.light 
-          ? AppColors.lightDestructive 
+      backgroundColor: brightness == Brightness.light
+          ? AppColors.lightDestructive
           : AppColors.darkDestructive,
-      textColor: brightness == Brightness.light 
-          ? AppColors.lightDestructiveForeground 
+      textColor: brightness == Brightness.light
+          ? AppColors.lightDestructiveForeground
           : AppColors.darkDestructiveForeground,
       icon: Icons.error,
     );
@@ -341,11 +330,11 @@ class AppUtils {
     showSnackBar(
       context,
       message,
-      backgroundColor: brightness == Brightness.light 
-          ? AppColors.lightWarning 
+      backgroundColor: brightness == Brightness.light
+          ? AppColors.lightWarning
           : AppColors.darkWarning,
-      textColor: brightness == Brightness.light 
-          ? AppColors.lightWarningForeground 
+      textColor: brightness == Brightness.light
+          ? AppColors.lightWarningForeground
           : AppColors.darkWarningForeground,
       icon: Icons.warning,
     );
@@ -408,16 +397,20 @@ class AppUtils {
   }
 
   /// Launch email
-  static Future<bool> launchEmail(String email, {String? subject, String? body}) async {
+  static Future<bool> launchEmail(String email,
+      {String? subject, String? body}) async {
     final uri = Uri(
       scheme: 'mailto',
       path: email,
       query: {
         if (subject != null) 'subject': subject,
         if (body != null) 'body': body,
-      }.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&'),
+      }
+          .entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&'),
     );
-    
+
     return await launchURL(uri.toString());
   }
 
@@ -432,7 +425,8 @@ class AppUtils {
   }
 
   /// Share files
-  static Future<void> shareFiles(List<String> paths, {String? text, String? subject}) async {
+  static Future<void> shareFiles(List<String> paths,
+      {String? text, String? subject}) async {
     await Share.shareXFiles(
       paths.map((path) => XFile(path)).toList(),
       text: text,
@@ -519,7 +513,8 @@ class AppUtils {
   static Color darkenColor(Color color, double percentage) {
     assert(percentage >= 0 && percentage <= 1);
     final hsl = HSLColor.fromColor(color);
-    final darkened = hsl.withLightness((hsl.lightness * (1 - percentage)).clamp(0.0, 1.0));
+    final darkened =
+        hsl.withLightness((hsl.lightness * (1 - percentage)).clamp(0.0, 1.0));
     return darkened.toColor();
   }
 
@@ -527,7 +522,8 @@ class AppUtils {
   static Color lightenColor(Color color, double percentage) {
     assert(percentage >= 0 && percentage <= 1);
     final hsl = HSLColor.fromColor(color);
-    final lightened = hsl.withLightness((hsl.lightness + (1 - hsl.lightness) * percentage).clamp(0.0, 1.0));
+    final lightened = hsl.withLightness(
+        (hsl.lightness + (1 - hsl.lightness) * percentage).clamp(0.0, 1.0));
     return lightened.toColor();
   }
 
@@ -583,14 +579,14 @@ class AppUtils {
   static String? getLengthWarningMessage(String text) {
     final length = text.length;
     final maxLength = AppConstants.maxTextLength;
-    
+
     if (length > maxLength) {
       return 'Text exceeds maximum length of $maxLength characters';
     } else if (length > maxLength * 0.9) {
       final remaining = maxLength - length;
       return '$remaining characters remaining';
     }
-    
+
     return null;
   }
 
@@ -599,7 +595,7 @@ class AppUtils {
     final words = countWords(text);
     final baseTime = 500; // 500ms base time
     final timePerWord = 50; // 50ms per word
-    
+
     final totalMs = baseTime + (words * timePerWord);
     return Duration(milliseconds: totalMs);
   }
@@ -617,12 +613,13 @@ class AppUtils {
   }
 
   /// Split long text into chunks for translation
-  static List<String> splitTextForTranslation(String text, {int maxChunkSize = 4000}) {
+  static List<String> splitTextForTranslation(String text,
+      {int maxChunkSize = 4000}) {
     if (text.length <= maxChunkSize) return [text];
-    
+
     final chunks = <String>[];
     final sentences = text.split(RegExp(r'[.!?]+\s*'));
-    
+
     String currentChunk = '';
     for (final sentence in sentences) {
       if ((currentChunk + sentence).length <= maxChunkSize) {
@@ -654,11 +651,11 @@ class AppUtils {
         }
       }
     }
-    
+
     if (currentChunk.isNotEmpty) {
       chunks.add(currentChunk);
     }
-    
+
     return chunks;
   }
 

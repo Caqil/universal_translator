@@ -31,7 +31,7 @@ class Translation extends Equatable {
 
   /// Detected language if source was auto-detect
   final String? detectedLanguage;
-
+  final bool? isOffline;
   const Translation({
     required this.id,
     required this.sourceText,
@@ -43,6 +43,7 @@ class Translation extends Equatable {
     this.confidence,
     this.alternatives,
     this.detectedLanguage,
+    this.isOffline,
   });
 
   @override
@@ -57,6 +58,7 @@ class Translation extends Equatable {
         confidence,
         alternatives,
         detectedLanguage,
+        isOffline
       ];
 
   @override

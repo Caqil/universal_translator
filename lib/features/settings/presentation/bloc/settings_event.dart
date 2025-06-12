@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../translation/data/models/translation_mode_model.dart';
 import '../../data/models/app_settings_model.dart';
 
 /// Base class for all settings events
@@ -12,6 +13,42 @@ abstract class SettingsEvent extends Equatable {
 /// Event to load current settings
 class LoadSettingsEvent extends SettingsEvent {
   const LoadSettingsEvent();
+}
+
+class ToggleTranslationMode extends SettingsEvent {
+  final TranslationMode mode;
+
+  const ToggleTranslationMode(this.mode);
+
+  @override
+  List<Object> get props => [mode];
+}
+
+class ToggleOfflineMode extends SettingsEvent {
+  final bool enabled;
+
+  const ToggleOfflineMode(this.enabled);
+
+  @override
+  List<Object> get props => [enabled];
+}
+
+class DownloadLanguageModel extends SettingsEvent {
+  final String languageCode;
+
+  const DownloadLanguageModel(this.languageCode);
+
+  @override
+  List<Object> get props => [languageCode];
+}
+
+class DeleteLanguageModel extends SettingsEvent {
+  final String languageCode;
+
+  const DeleteLanguageModel(this.languageCode);
+
+  @override
+  List<Object> get props => [languageCode];
 }
 
 /// Event to update all settings
