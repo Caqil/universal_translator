@@ -7,6 +7,8 @@ import '../../core/services/injection_container.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../features/camera/presentation/pages/camera_page.dart';
+import '../../features/conversation/presentation/bloc/conversation_bloc.dart';
+import '../../features/conversation/presentation/pages/conversation_page.dart';
 import '../../features/history/presentation/bloc/history_bloc.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -27,7 +29,21 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
   /// List of pages for IndexedStack
   final List<Widget> _pages = [
     const TranslationPage(),
-    const CameraPage(),
+    BlocProvider(
+      create: (context) {
+        if (sl.isRegistered<ConversationBloc>()) {
+          return sl<ConversationBloc>();
+        } else {
+          throw Exception('ConversationBloc dependencies not ready yet');
+        }
+      },
+      child: const ConversationPage(
+        user1Language: 'en',
+        user2Language: 'es',
+        user1LanguageName: 'English',
+        user2LanguageName: 'Spanish',
+      ),
+    ),
     const CameraPage(),
     // In your navigation/routing, only create HistoryBloc when the page is actually accessed
     BlocProvider(

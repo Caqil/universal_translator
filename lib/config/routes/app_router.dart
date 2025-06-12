@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/camera/presentation/pages/camera_page.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
@@ -58,11 +58,11 @@ final GoRouter appRouter = GoRouter(
         ),
 
         // Camera tab
-        // GoRoute(
-        //   path: RouteNames.camera,
-        //   name: 'camera',
-        //   builder: (context, state) => const CameraPage(),
-        // ),
+        GoRoute(
+          path: RouteNames.camera,
+          name: 'camera',
+          builder: (context, state) => const CameraPage(),
+        ),
 
         // History tab
         GoRoute(
@@ -344,7 +344,6 @@ class TranslationFullscreenPage extends StatelessWidget {
     );
   }
 }
-
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});

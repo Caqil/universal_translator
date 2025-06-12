@@ -17,6 +17,9 @@ import 'core/constants/app_constants.dart';
 import 'core/data_usage_mode_adapter.dart';
 import 'core/services/injection_container.dart';
 import 'core/utils/cache_repair_utility.dart';
+import 'features/conversation/data/models/conversation_message_model.dart';
+import 'features/conversation/data/models/conversation_session_model.dart';
+import 'features/conversation/presentation/bloc/conversation_bloc.dart';
 import 'features/history/data/models/history_item_model.dart';
 import 'features/history/presentation/bloc/history_event.dart';
 import 'features/settings/data/models/app_settings_model.dart';
@@ -103,9 +106,17 @@ Future<void> _registerHiveAdapters() async {
       debugPrint('✅ HistoryItemModelAdapter registered (typeId: 3)');
     }
 
-    if (!Hive.isAdapterRegistered(5)) {
+    if (!Hive.isAdapterRegistered(4)) {
       Hive.registerAdapter(SettingsModelAdapter());
+      debugPrint('✅ SettingsModelAdapter registered (typeId: 4)');
+    }
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(ConversationMessageModelAdapter());
       debugPrint('✅ SettingsModelAdapter registered (typeId: 5)');
+    }
+    if (!Hive.isAdapterRegistered(6)) {
+      Hive.registerAdapter(ConversationSessionModelAdapter());
+      debugPrint('✅ SettingsModelAdapter registered (typeId: 6)');
     }
 
     debugPrint('✅ All Hive adapters registered successfully');

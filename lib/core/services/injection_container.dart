@@ -1,14 +1,16 @@
-
+import 'package:camera/camera.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart'; 
+import 'package:uuid/uuid.dart';
 
+import '../../features/conversation/data/models/conversation_session_model.dart';
 import '../constants/app_constants.dart';
 import '../../features/history/data/models/history_item_model.dart';
 import 'injection_container.config.dart';
@@ -56,6 +58,27 @@ Future<void> init() async {
   }
 }
 
+Future<void> _registerCameraDependencies() async {
+  try {
+    // Image Picker - Manual registration (plugin initialization)
+    if (!sl.isRegistered<ImagePicker>()) {
+      sl.registerLazySingleton<ImagePicker>(() => ImagePicker());
+      debugPrint('✅ ImagePicker registered');
+    }
+
+    // Text Recognizer - Manual registration (ML Kit initialization)
+    if (!sl.isRegistered<TextRecognizer>()) {
+      sl.registerLazySingleton<TextRecognizer>(() => TextRecognizer());
+      debugPrint('✅ TextRecognizer registered');
+    }
+
+    debugPrint('✅ Camera translation dependencies registered');
+  } catch (e) {
+    debugPrint('❌ Camera translation dependencies registration failed: $e');
+    // Don't rethrow - camera features will just be disabled
+  }
+}
+
 /// Register ONLY dependencies that can't use @injectable (async initialization required)
 Future<void> _registerManualDependencies() async {
   try {
@@ -86,8 +109,6 @@ Future<void> _registerManualDependencies() async {
       sl.registerLazySingleton<FlutterTts>(() => flutterTts);
       debugPrint('✅ FlutterTts registered');
     }
-
-    // Camera - Manual registration with error handling (async + can fail)
     if (!sl.isRegistered<List<CameraDescription>>()) {
       try {
         final cameras =
@@ -99,6 +120,7 @@ Future<void> _registerManualDependencies() async {
         sl.registerLazySingleton<List<CameraDescription>>(() => []);
       }
     }
+    await _registerCameraDependencies();
   } catch (e) {
     debugPrint('❌ Manual dependencies registration failed: $e');
     rethrow;
@@ -153,7 +175,17 @@ Future<void> _initializeHiveBoxes() async {
       );
       debugPrint('✅ History box registered');
     }
-
+    if (!sl.isRegistered<Box<ConversationSessionModel>>(
+        instanceName: 'conversationsBox')) {
+      final conversationsBox =
+          await Hive.openBox<ConversationSessionModel>('conversations')
+              .timeout(const Duration(seconds: 10));
+      sl.registerLazySingleton<Box<ConversationSessionModel>>(
+        () => conversationsBox,
+        instanceName: 'conversationsBox',
+      );
+      debugPrint('✅ Conversations box registered');
+    }
     debugPrint('✅ All Hive boxes initialized successfully');
   } catch (e) {
     debugPrint('❌ Hive boxes initialization failed: $e');

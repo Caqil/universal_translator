@@ -560,7 +560,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
 
     return Tooltip(
       message: widget.tooltip ??
-          (_isListening ? 'stop_listening'.tr() : 'tap_to_speak'.tr()),
+          (_isListening
+              ? 'stop_listening'.tr()
+              : 'conversation.tap_to_speak'.tr()),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -617,7 +619,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
           if (widget.showLabel) ...[
             const SizedBox(height: 8),
             Text(
-              _isListening ? 'listening'.tr() : 'tap_to_speak'.tr(),
+              _isListening
+                  ? 'listening'.tr()
+                  : 'conversation.tap_to_speak'.tr(),
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.primary(brightness),

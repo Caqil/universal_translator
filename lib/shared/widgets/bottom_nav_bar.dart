@@ -106,7 +106,7 @@ class CustomBottomNavBar extends StatelessWidget {
       _NavigationItem(
         icon: Iconsax.search_normal,
         activeIcon: Iconsax.search_normal_1,
-        label: 'navigation.search'.tr(),
+        label: 'navigation.translate'.tr(),
       ),
       _NavigationItem(
         icon: Iconsax.translate,
